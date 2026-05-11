@@ -1,0 +1,685 @@
+  /* ============================================================
+   * CSS v20 — GDG Giardinaggio
+   * STEP 1: Variabili globali + reset completo di tutti i
+   * componenti base.
+  /* ------------------------------------------------------------
+   * 0. CUSTOM PROPERTIES — Palette e token di design
+   * ------------------------------------------------------------ */
+  :root {
+    /* Verdi */
+    --green-dark:    #1B4332;
+    --green-mid:     #2D6A4F;
+    --green-light:   #D8F3DC;
+    --green-accent:  #52B788;
+
+    /* Amber */
+    --amber:         #F9A825;
+    --amber-light:   #FFF8E1;
+    --amber-dark:    #B45309;
+
+    /* Semantici */
+    --blue:          #1565C0;
+    --blue-light:    #E3F0FF;
+    --red:           #C62828;
+    --red-light:     #FFE4E4;
+    --grey:          #37474F;
+    --grey-light:    #ECEFF1;
+
+    /* Superfici e testo */
+    --bg-main:       #F2F5F2;
+    --bg-card:       #FFFFFF;
+    --text-main:     #1A1A2E;
+    --text-muted:    #64748B;
+    --border-light:  #E8ECEE;
+
+    /* Geometria */
+    --radius-sm:     6px;
+    --radius-md:     10px;
+    --radius-lg:     14px;
+    --shadow-sm:     0 1px 4px rgba(0,0,0,.07);
+    --shadow-md:     0 2px 10px rgba(0,0,0,.10);
+
+    /* Font */
+    --font: 'Segoe UI', Arial, sans-serif;
+  }
+
+  /* ------------------------------------------------------------
+   * 1. RESET BASE
+   * ------------------------------------------------------------ */
+  *, *::before, *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  body {
+    font-family: var(--font);
+    display: flex;
+    height: 100vh;
+    overflow: hidden;
+    background: var(--bg-main);
+    color: var(--text-main);
+  }
+
+  /* ------------------------------------------------------------
+   * 2. SIDEBAR
+   * ------------------------------------------------------------ */
+  #sidebar {
+    width: 230px;
+    min-width: 230px;
+    background: var(--green-dark);
+    color: #fff;
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .sidebar-logo {
+    padding: 22px 18px 14px;
+    border-bottom: 1px solid rgba(255,255,255,.10);
+  }
+
+  .sidebar-logo h2 {
+    font-size: 16px;
+    font-weight: 700;
+    line-height: 1.3;
+    color: #fff;
+  }
+
+  .sidebar-logo small {
+    color: #95D5B2;
+    font-size: 11px;
+  }
+
+  #sidebar nav a {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px 14px;
+    margin: 3px 10px;
+    color: #B7E4C7;
+    text-decoration: none;
+    font-size: 13.5px;
+    cursor: pointer;
+    border-radius: var(--radius-sm);
+    transition: all .18s;
+  }
+
+  #sidebar nav a:hover {
+    background: rgba(255,255,255,.10);
+    color: #fff;
+  }
+
+  /* Voce attiva — pill amber */
+  #sidebar nav a.active {
+    background: rgba(249,168,37,.18);
+    color: #fff;
+    font-weight: 600;
+    border-left: 3px solid var(--amber);
+    padding-left: 11px;
+  }
+
+  .sidebar-footer {
+    margin-top: auto;
+    padding: 14px 16px;
+    border-top: 1px solid rgba(255,255,255,.10);
+  }
+
+  /* ------------------------------------------------------------
+   * 3. AREA PRINCIPALE
+   * ------------------------------------------------------------ */
+  #main {
+    flex: 1;
+    overflow-y: auto;
+    padding: 26px 30px;
+    background: var(--bg-main);
+  }
+
+  .page        { display: none; }
+  .page.active { display: block; }
+
+  h1 {
+    font-size: 26px;
+    font-weight: 700;
+    color: var(--green-dark);
+    margin-bottom: 4px;
+  }
+
+  .subtitle {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin-bottom: 20px;
+  }
+
+  /* ------------------------------------------------------------
+   * 4. KPI GRID E CARD
+   * ------------------------------------------------------------ */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 14px;
+    margin-bottom: 20px;
+  }
+
+  .card {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 16px 18px;
+    border-left: 4px solid var(--green-dark);
+    box-shadow: var(--shadow-sm);
+    transition: box-shadow .18s;
+  }
+
+  .card:hover { box-shadow: var(--shadow-md); }
+
+  .card .label {
+    font-size: 11px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: .5px;
+    margin-bottom: 5px;
+  }
+
+  .card .value {
+    font-size: 21px;
+    font-weight: 700;
+    color: var(--green-dark);
+  }
+
+  .card .delta {
+    font-size: 11px;
+    margin-top: 4px;
+    color: var(--text-muted);
+  }
+
+  .card.c-red    { border-left-color: var(--red); }
+  .card.c-red    .value { color: var(--red); }
+  .card.c-blue   { border-left-color: var(--blue); }
+  .card.c-blue   .value { color: var(--blue); }
+  .card.c-grey   { border-left-color: var(--grey); }
+  .card.c-grey   .value { color: var(--grey); }
+  .card.c-margin { border-left-color: var(--blue); }
+  .card.c-margin .value { color: var(--blue); }
+  .card.c-amber  { border-left-color: var(--amber); }
+  .card.c-amber  .value { color: var(--amber-dark); }
+
+  /* ------------------------------------------------------------
+   * 5. HEADER SEZIONE (.sec) — linea laterale colorata
+   * ------------------------------------------------------------ */
+  .sec {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 0 8px 12px;
+    border-left: 4px solid var(--green-dark);
+    background: transparent;
+    color: var(--green-dark);
+    font-weight: 700;
+    font-size: 13.5px;
+    margin: 20px 0 10px;
+  }
+
+  .sec.blue { border-left-color: var(--blue); color: var(--blue); }
+  .sec.grey { border-left-color: var(--grey); color: var(--grey); }
+
+  .iva-hdr {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 0 0 8px 12px;
+    border-left: 4px solid var(--grey);
+    background: transparent;
+    color: var(--grey);
+    font-weight: 700;
+    font-size: 13.5px;
+    margin: 18px 0 10px;
+  }
+
+  /* ------------------------------------------------------------
+   * 6. TABELLE — thead neutro, niente più verde pieno
+   * ------------------------------------------------------------ */
+  .tbl-wrap {
+    overflow-x: auto;
+    border-radius: var(--radius-md);
+    box-shadow: var(--shadow-sm);
+    background: var(--bg-card);
+    margin-bottom: 16px;
+    border: 1px solid var(--border-light);
+  }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+
+  thead th {
+    background: var(--grey-light);
+    color: var(--text-muted);
+    padding: 10px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 11.5px;
+    text-transform: uppercase;
+    letter-spacing: .4px;
+    white-space: nowrap;
+    position: sticky;
+    top: 0;
+    border-bottom: 1.5px solid var(--border-light);
+  }
+
+  /* Retrocompatibilità classi JS esistenti */
+  thead th.blue { color: var(--blue); }
+  thead th.iva  { color: var(--grey); }
+
+  tbody tr:nth-child(even) { background: #FAFBFA; }
+  tbody tr:hover           { background: var(--green-light); transition: background .12s; }
+
+  td {
+    padding: 7px 10px;
+    border-bottom: 1px solid var(--border-light);
+    vertical-align: middle;
+  }
+
+  tfoot td {
+    background: #F0F7F2;
+    font-weight: 700;
+    padding: 8px 10px;
+    border-top: 2px solid var(--green-dark);
+    color: var(--green-dark);
+  }
+
+  tfoot td.iva-tot {
+    background: var(--grey-light);
+    color: var(--grey);
+  }
+
+  .r   { text-align: right; }
+  .pos { color: #1B5E20; font-weight: 600; }
+  .neg { color: var(--red); font-weight: 600; }
+
+  /* ------------------------------------------------------------
+   * 7. INPUT, SELECT, TEXTAREA
+   * ------------------------------------------------------------ */
+  input, select, textarea {
+    border: 1.5px solid var(--border-light);
+    border-radius: var(--radius-sm);
+    padding: 5px 8px;
+    font-size: 12.5px;
+    width: 100%;
+    background: var(--bg-card);
+    color: var(--text-main);
+    outline: none;
+    font-family: var(--font);
+    transition: border-color .15s, box-shadow .15s;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--green-accent);
+    box-shadow: 0 0 0 3px rgba(82,183,136,.18);
+  }
+
+  input[type=number] { text-align: right; }
+
+  .w-um  { width: 55px  !important; }
+  .w-mes { width: 65px  !important; }
+  .w-lg  { min-width: 200px; }
+
+  /* ------------------------------------------------------------
+   * 8. BOTTONI
+   * ------------------------------------------------------------ */
+  .btn {
+    padding: 9px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    font-family: var(--font);
+    transition: all .18s;
+  }
+
+  .btn-green       { background: var(--green-dark); color: #fff; }
+  .btn-green:hover { background: var(--green-mid); }
+  .btn-grey        { background: #546E7A; color: #fff; }
+  .btn-grey:hover  { background: var(--grey); }
+
+  .btn-red {
+    background: transparent;
+    color: var(--red);
+    border: 1px solid #FFCDD2;
+    font-size: 11px;
+    padding: 4px 10px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    transition: all .15s;
+  }
+  .btn-red:hover { background: var(--red-light); }
+
+  .btn-add {
+    background: var(--green-light);
+    color: var(--green-dark);
+    border: 1.5px dashed var(--green-accent);
+    padding: 7px 18px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    font-size: 12.5px;
+    font-weight: 600;
+    font-family: var(--font);
+    margin: 6px 0;
+    transition: all .15s;
+  }
+  .btn-add:hover { background: #B7E4C7; }
+
+  .toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 16px;
+    flex-wrap: wrap;
+  }
+
+  /* ------------------------------------------------------------
+   * 9. TABS — pill arrotondati (Costi Generali)
+   * ------------------------------------------------------------ */
+  .tabs {
+    display: flex;
+    gap: 6px;
+    margin-bottom: 20px;
+  }
+
+  .tab {
+    padding: 8px 20px;
+    cursor: pointer;
+    color: var(--text-muted);
+    font-size: 13px;
+    font-weight: 500;
+    border-radius: 20px;
+    border: 1.5px solid var(--border-light);
+    background: var(--bg-card);
+    transition: all .18s;
+  }
+
+  .tab.active {
+    background: var(--green-dark);
+    color: #fff;
+    border-color: var(--green-dark);
+    font-weight: 700;
+  }
+
+  .tab:hover:not(.active) {
+    background: var(--green-light);
+    color: var(--green-dark);
+    border-color: var(--green-accent);
+  }
+
+  /* ------------------------------------------------------------
+   * 10. ALERT
+   * ------------------------------------------------------------ */
+  .alert {
+    padding: 11px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 14px;
+    font-size: 13px;
+  }
+
+  .alert.info    { background: #E3F2FD; color: var(--blue);  border-left: 4px solid var(--blue); }
+  .alert.warn    { background: #FFF8E1; color: #E65100;       border-left: 4px solid #FF8F00; }
+  .alert.success { background: var(--green-light); color: #1B5E20; border-left: 4px solid var(--green-accent); }
+
+  /* ------------------------------------------------------------
+   * 11. BARRA PROGETTO (proj-bar)
+   * ------------------------------------------------------------ */
+  .proj-bar {
+    background: var(--bg-card);
+    border-radius: var(--radius-md);
+    padding: 14px 18px;
+    margin-bottom: 18px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: var(--shadow-sm);
+    border: 1px solid var(--border-light);
+  }
+
+  .proj-bar label {
+    font-weight: 600;
+    color: var(--text-main);
+    font-size: 13px;
+    white-space: nowrap;
+  }
+
+  .proj-bar select { max-width: 300px; }
+
+  .proj-tag {
+    background: var(--green-light);
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: var(--green-dark);
+    font-weight: 600;
+  }
+
+  .recap {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(165px, 1fr));
+    gap: 12px;
+    margin: 14px 0;
+  }
+
+  /* ------------------------------------------------------------
+   * 12. BADGE STATO — pastello v17
+   * ------------------------------------------------------------ */
+  .stato-badge       { display: inline-block; padding: 3px 12px; border-radius: 20px; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+  .badge-completato  { background: var(--green-light); color: #1B5E20; }
+  .badge-in-corso    { background: var(--blue-light);  color: var(--blue); }
+  .badge-pianificato { background: var(--amber-light); color: var(--amber-dark); }
+  .badge-sospeso     { background: var(--red-light);   color: var(--red); }
+
+  /* ------------------------------------------------------------
+   * 13. SAVE-BAR — pill pastello top-right
+   * ------------------------------------------------------------ */
+  #save-bar {
+    position: fixed;
+    top: 12px;
+    right: 18px;
+    z-index: 9999;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    background: var(--bg-card);
+    border-radius: 20px;
+    padding: 6px 14px;
+    font-size: 12px;
+    font-weight: 600;
+    box-shadow: var(--shadow-md);
+    border: 1.5px solid var(--border-light);
+    opacity: 0;
+    transition: opacity .3s;
+    font-family: var(--font);
+  }
+
+  #save-bar.saving { opacity: 1; color: var(--blue);  border-color: #BBDEFB; background: #E3F0FF; }
+  #save-bar.saved  { opacity: 1; color: #1B5E20;       border-color: #B7E4C7; background: var(--green-light); }
+
+  #save-bar .dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: currentColor;
+  }
+
+  #save-bar.saving .dot { animation: pulse .7s infinite alternate; }
+
+  @keyframes pulse {
+    from { opacity: .3; }
+    to   { opacity: 1; }
+  }
+
+  /* ------------------------------------------------------------
+   * 14. SCROLLBAR
+   * ------------------------------------------------------------ */
+  ::-webkit-scrollbar       { width: 6px; height: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #B0BEC5; border-radius: 4px; }
+  ::-webkit-scrollbar-thumb:hover { background: #78909C; }
+
+  /* ------------------------------------------------------------
+   * 15. BARRA MARGINE% — nuova v17, usata dallo Step 5
+   * ------------------------------------------------------------ */
+  .pct-bar         { display: flex; height: 8px; border-radius: 4px; overflow: hidden; background: var(--border-light); min-width: 80px; }
+  .pct-fill-amber  { background: var(--amber);        height: 100%; transition: width .3s; }
+  .pct-fill-green  { background: var(--green-accent); height: 100%; transition: width .3s; }
+
+  /* ------------------------------------------------------------
+   * 16. FILTRI STATO DASHBOARD — pill di filtro v19
+   *
+   * .dash-filtri     — contenitore flex dei pill
+   * .dash-fil-pill   — singolo pill non attivo
+   * .dash-fil-active — pill selezionato
+   * .dash-fil-count  — badge numerico dentro il pill
+   * .dash-count-lbl  — label testo sotto la tabella
+   * ------------------------------------------------------------ */
+  .dash-filtri {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+    align-items: center;
+  }
+
+  .dash-fil-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1.5px solid var(--border-light);
+    background: var(--bg-card);
+    color: var(--text-muted);
+    font-size: 12.5px;
+    font-weight: 500;
+    font-family: var(--font);
+    cursor: pointer;
+    transition: all .18s;
+    white-space: nowrap;
+  }
+
+  .dash-fil-pill:hover {
+    background: var(--green-light);
+    color: var(--green-dark);
+    border-color: var(--green-accent);
+  }
+
+  /* Pill attivo — verde scuro con testo bianco */
+  .dash-fil-pill.dash-fil-active {
+    background: var(--green-dark);
+    color: #fff;
+    border-color: var(--green-dark);
+    font-weight: 700;
+  }
+
+  /* Badge numerico dentro il pill */
+  .dash-fil-count {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 20px;
+    height: 18px;
+    padding: 0 5px;
+    border-radius: 10px;
+    font-size: 10.5px;
+    font-weight: 700;
+    background: rgba(0,0,0,.08);
+    color: inherit;
+    transition: background .18s;
+  }
+
+  /* Badge nel pill attivo ha sfondo leggermente più chiaro */
+  .dash-fil-pill.dash-fil-active .dash-fil-count {
+    background: rgba(255,255,255,.20);
+  }
+
+  /* Colori specifici per stato quando il pill NON è attivo */
+  .dash-fil-pill[onclick*="Completato"]:not(.dash-fil-active)  { border-color: #B7E4C7; color: #1B5E20; }
+  .dash-fil-pill[onclick*="In corso"]:not(.dash-fil-active)    { border-color: #BBDEFB; color: var(--blue); }
+  .dash-fil-pill[onclick*="Pianificato"]:not(.dash-fil-active) { border-color: #FFE082; color: var(--amber-dark); }
+  .dash-fil-pill[onclick*="Sospeso"]:not(.dash-fil-active)     { border-color: #FFCDD2; color: var(--red); }
+
+  /* Label contatore sotto la tabella */
+  .dash-count-lbl {
+    font-size: 11.5px;
+    color: var(--text-muted);
+    margin-top: -10px;
+    margin-bottom: 16px;
+    padding-left: 2px;
+  }
+
+  /* ------------------------------------------------------------
+   * 17. UTILITY — .no-print
+   * Classe generica per nascondere elementi che non devono
+   * comparire nella stampa/PDF (bottoni, toolbar, sidebar ecc.).
+   * Usata anche dal template PDF della finestra dedicata.
+   * ------------------------------------------------------------ */
+  .no-print { /* nascosto solo via @media print, vedi sotto */ }
+
+  /* ------------------------------------------------------------
+   * 18. @media print — regole globali stampa
+   *
+   * Si applicano quando l'utente usa Ctrl+P o salva come PDF
+   * dalla finestra principale dell'app (non dalla finestra PDF
+   * dedicata che ha le sue regole autonome).
+   *
+   * Obiettivi:
+   *   - Nascondere tutta la UI di navigazione (sidebar, save-bar)
+   *   - Rimuovere overflow:hidden dal body per la multi-pagina
+   *   - Eliminare ombre e bordi decorativi per stampa pulita
+   * ------------------------------------------------------------ */
+  @media print {
+
+    /* Permette la stampa multi-pagina rimuovendo l'overflow fisso */
+    body {
+      display: block;
+      height: auto;
+      overflow: visible;
+    }
+
+    /* Nasconde l'intera sidebar */
+    #sidebar { display: none !important; }
+
+    /* Nasconde la save-bar flottante */
+    #save-bar { display: none !important; }
+
+    /* L'area principale occupa tutta la larghezza senza scroll */
+    #main {
+      overflow: visible;
+      padding: 10mm 14mm;
+      width: 100%;
+    }
+
+    /* Nasconde tutti gli elementi marcati con .no-print */
+    .no-print { display: none !important; }
+
+    /* Nasconde toolbar e bottoni di azione */
+    .toolbar,
+    .btn-add,
+    .btn,
+    .btn-green,
+    .btn-grey,
+    .btn-red,
+    .proj-bar select,
+    #prev-editor .sec.grey,
+    #prev-recap { display: none !important; }
+
+    /* Rimuove ombre e bordi decorativi per stampa più pulita */
+    .card,
+    .tbl-wrap { box-shadow: none; }
+
+    /* Evita interruzioni di pagina dentro le tabelle */
+    tr { page-break-inside: avoid; }
+
+    /* Colonne interne al preventivo non visibili al cliente
+       (sfondo giallo costo interno) — nascoste in stampa globale */
+    #prev-table thead th:nth-child(5),
+    #prev-table tbody td:nth-child(5) { display: none !important; }
+  }
