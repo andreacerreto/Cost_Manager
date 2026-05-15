@@ -380,12 +380,6 @@ async function restoreBackupJson(event) {
     AppSettings.save(backup.settings || {
       ...DEFAULT_SETTINGS,
       first_run_done: true,
-      language: 'it',
-      currency: 'EUR',
-      locale: 'it-IT',
-      tax_label: 'IVA',
-      tax_id_label: 'P.IVA',
-      tax_rates: [0, 4, 10, 22],
     });
 
     DB.invalidateCache();

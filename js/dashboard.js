@@ -32,7 +32,7 @@ Pages._dashboardFiltroStato = '';
  * ------------------------------------------------------------ */
 Pages.dashboard = async function () {
   const el = document.getElementById('page-dashboard');
-  el.innerHTML = '<p class="subtitle">Caricamento\u2026</p>';
+  el.innerHTML = '<p class="subtitle">Loading...</p>';
 
   /* ----------------------------------------------------------
    * STEP 1 — Carica in parallelo:
@@ -202,7 +202,7 @@ Pages.dashboard = async function () {
     h += '<div id="dash-count-label" class="dash-count-lbl"></div>';
 
   } else {
-    h += '<div class="alert info">Nessun progetto. Aggiungine uno in <b>Anagrafica Progetti</b>.</div>';
+    h += '<div class="alert info">No projects yet. Add one in <b>Projects</b>.</div>';
   }
 
   el.innerHTML = h;

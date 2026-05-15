@@ -2,8 +2,8 @@
 
 /* ============================================================
  * VARIANZE.JS — Renderer della pagina Analisi Varianze.
- * Confronto automatico Previsto vs Effettivo per ogni progetto.
- * Nessun dato da inserire — tutto calcolato dal DB.
+ * Automatic planned vs actual comparison for each project.
+ * No manual data entry: everything is calculated from the DB.
  * ============================================================ */
 
 Pages.varianze = async function() {
@@ -46,25 +46,25 @@ Pages.varianze = async function() {
   const mp = rp - cp, mc = rc - cc;
 
   el.innerHTML =
-    '<h1>Analisi Varianze</h1>' +
-    '<p class="subtitle">Confronto automatico Previsto vs Effettivo \u2014 nessun dato da inserire qui.</p>' +
+    '<h1>Variance Analysis</h1>' +
+    '<p class="subtitle">Automatic planned vs actual comparison. No manual data entry is needed here.</p>' +
 
     '<div class="tbl-wrap"><table>' +
       '<thead><tr>' +
-        '<th>Codice</th><th>Nome</th>' +
-        '<th class="r">Costo Prev.</th><th class="r">Costo Eff.</th>' +
-        '<th class="r">\u0394 Costo</th><th class="r">\u0394%</th>' +
-        '<th class="r">Ricavo Prev.</th><th class="r">Ricavo Eff.</th>' +
-        '<th class="r">\u0394 Ricavo</th><th class="r">\u0394%</th>' +
-        '<th class="r">Marg. Prev.</th><th class="r">Marg. Eff.</th>' +
-        '<th class="r">\u0394 Marg.</th>' +
+        '<th>Code</th><th>Name</th>' +
+        '<th class="r">Planned Cost</th><th class="r">Actual Cost</th>' +
+        '<th class="r">\u0394 Cost</th><th class="r">\u0394%</th>' +
+        '<th class="r">Planned Revenue</th><th class="r">Actual Revenue</th>' +
+        '<th class="r">\u0394 Revenue</th><th class="r">\u0394%</th>' +
+        '<th class="r">Planned Margin</th><th class="r">Actual Margin</th>' +
+        '<th class="r">\u0394 Margin</th>' +
         '<th class="r iva">' + F.esc(F.taxLabel()) + ' Net B.</th><th class="r iva">' + F.esc(F.taxLabel()) + ' Net A.</th>' +
       '</tr></thead>' +
 
       '<tbody>' + rows.join('') + '</tbody>' +
 
       '<tfoot><tr>' +
-        '<td colspan="2"><b>TOTALI</b></td>' +
+        '<td colspan="2"><b>TOTALS</b></td>' +
         '<td class="r">' + F.money(cp) + '</td>' +
         '<td class="r">' + F.money(cc) + '</td>' +
         '<td class="r ' + F.cls(cc - cp, true) + '">' + F.money(cc - cp) + '</td>' +

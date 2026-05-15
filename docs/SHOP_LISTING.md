@@ -19,8 +19,3 @@ actuals, overheads and client quotes. No subscription. No account. Excel export 
 - Includes JSON backup and restore.
 - English and Italian interface options.
 - Configurable currency and tax labels.
-
-## Suggested Price
-
-Launch price: 5 EUR  
-Standard price: 9 EUR

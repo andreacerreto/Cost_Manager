@@ -120,11 +120,11 @@ async function testSettingsAreNormalizedBeforePersisting() {
   })`);
 
   assert.equal(saved.language, 'en');
-  assert.equal(saved.currency, 'EUR');
+  assert.equal(saved.currency, 'USD');
   assert.equal(saved.locale, 'en-US');
   assert.deepEqual(plain(saved.tax_rates), [22]);
-  assert.equal(saved.tax_label, 'VAT');
-  assert.equal(saved.tax_id_label, 'Tax ID');
+  assert.equal(saved.tax_label, 'Sales tax');
+  assert.equal(saved.tax_id_label, 'EIN / Tax ID');
   assert.equal(saved.company.name.length, 500);
   assert.doesNotThrow(() => get(context, 'AppSettings.money(10)'));
 }

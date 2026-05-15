@@ -15,13 +15,33 @@ Pages.costigenerali = async function() {
     '<p class="subtitle">Costi fissi indipendenti dai progetti: struttura, personale, utenze.</p>' +
     '<div class="tabs">' +
       '<div class="tab' + (App.cgTab === 'budget'     ? ' active' : '') + '" onclick="Pages.cgTab(this, \'budget\')">Budget Preventivo</div>' +
-      '<div class="tab' + (App.cgTab === 'consuntivo' ? ' active' : '') + '" onclick="Pages.cgTab(this, \'consuntivo\')">Consuntivo Effettivo</div>' +
-      '<div class="tab' + (App.cgTab === 'varianza'   ? ' active' : '') + '" onclick="Pages.cgTab(this, \'varianza\')">Varianza</div>' +
+      '<div class="tab' + (App.cgTab === 'consuntivo' ? ' active' : '') + '" onclick="Pages.cgTab(this, \'consuntivo\')">Actuals</div>' +
+      '<div class="tab' + (App.cgTab === 'varianza'   ? ' active' : '') + '" onclick="Pages.cgTab(this, \'varianza\')">Variance</div>' +
     '</div>' +
     '<div id="cg-content"></div>';
 
   await Pages.cgRender(App.cgTab);
 };
+
+const CG_ITEM_TRANSLATIONS_EN = {
+  'Stipendi fissi': 'Fixed salaries',
+  'Contributi previdenziali': 'Payroll taxes and benefits',
+  'Affitto sede / magazzino': 'Office / warehouse rent',
+  'Utenze': 'Utilities',
+  'Carburante mezzi aziendali': 'Company vehicle fuel',
+  'Manutenzione attrezzature': 'Equipment maintenance',
+  'Assicurazioni': 'Insurance',
+  'Software e abbonamenti': 'Software and subscriptions',
+  'Consulenze amministrative / legali': 'Administrative / legal consulting',
+  'Materiale consumabile generico': 'General consumables',
+  'Spese di rappresentanza': 'Representation expenses',
+  'Formazione e aggiornamento': 'Training and development',
+  'Altre spese generali': 'Other overhead expenses',
+};
+
+function cgDisplayItemName(value) {
+  return CG_ITEM_TRANSLATIONS_EN[value] || value || '';
+}
 
 /* Cambia tab attivo */
 Pages.cgTab = async function(tabEl, tab) {
@@ -64,7 +84,7 @@ Pages.cgRender = async function(tab) {
   function row(r) {
     const tot = C.MESIK.reduce(function(a, m) { return a + (+r[m] || 0); }, 0);
     return '<tr>' +
-      '<td><input data-role="voce" value="' + F.esc(r.voce) + '" class="w-lg"></td>' +
+      '<td><input data-role="voce" value="' + F.esc(cgDisplayItemName(r.voce)) + '" class="w-lg"></td>' +
       C.MESIK.map(function(m) {
         return '<td><input data-role="' + m + '" type="number" value="' + (r[m] || '') + '" step="0.01" min="0" class="w-mes"></td>';
       }).join('') +
@@ -77,20 +97,20 @@ Pages.cgRender = async function(tab) {
   el.innerHTML =
     '<div class="tbl-wrap" style="overflow-x:auto;"><table>' +
       '<thead><tr>' +
-        '<th>Voce di Costo</th>' +
+        '<th>Cost Item</th>' +
         C.MESIL.map(function(m) { return '<th>' + m + '</th>'; }).join('') +
-        '<th class="iva">' + F.esc(F.taxLabel()) + ' %</th><th>TOT ANNO</th><th class="iva">' + F.esc(F.taxLabel()) + ' Ann.</th>' +
+        '<th class="iva">' + F.esc(F.taxLabel()) + ' %</th><th>Year Total</th><th class="iva">Annual ' + F.esc(F.taxLabel()) + '</th>' +
       '</tr></thead>' +
       '<tbody id="cg-body">' + data.map(row).join('') + '</tbody>' +
       '<tfoot><tr>' +
-        '<td><b>TOTALI</b></td>' +
+        '<td><b>TOTALS</b></td>' +
         C.MESIK.map(function(m) { return '<td id="cg-col-' + m + '" class="r"></td>'; }).join('') +
         '<td></td>' +
         '<td id="cg-grand-tot" class="r" style="font-weight:600;"></td>' +
         '<td id="cg-grand-iva" class="r iva" style="font-weight:600;"></td>' +
       '</tr></tfoot>' +
     '</table></div>' +
-    '<button class="btn-add" onclick="Pages.cgAddRow(\'' + tab + '\')">+ Nuova voce</button>';
+    '<button class="btn-add" onclick="Pages.cgAddRow(\'' + tab + '\')">New item</button>';
 
   Pages.cgRecalc();
 
@@ -190,7 +210,7 @@ Pages.cgVarianza = async function() {
     totB += tb; totC += tc;
 
     return '<tr>' +
-      '<td>' + F.esc(b.voce || c.voce || '') + '</td>' +
+      '<td>' + F.esc(cgDisplayItemName(b.voce || c.voce || '')) + '</td>' +
       C.MESIK.map(function(m) {
         const v = (+c[m] || 0) - (+b[m] || 0);
         return '<td class="r ' + F.cls(v, true) + '">' + (v ? F.money(v) : '\u2014') + '</td>';
@@ -208,13 +228,13 @@ Pages.cgVarianza = async function() {
   document.getElementById('cg-content').innerHTML =
     '<div class="tbl-wrap" style="overflow-x:auto;"><table>' +
       '<thead><tr>' +
-        '<th>Voce di Costo</th>' +
+        '<th>Cost Item</th>' +
         C.MESIL.map(function(m) { return '<th>' + m + '</th>'; }).join('') +
-        '<th>TOT ANNO</th>' +
+        '<th>Year Total</th>' +
       '</tr></thead>' +
       '<tbody>' + rows.join('') + '</tbody>' +
       '<tfoot><tr>' +
-        '<td><b>TOTALE</b></td>' +
+        '<td><b>TOTAL</b></td>' +
         colDelta +
         '<td class="r ' + F.cls(totC - totB, true) + '" style="font-weight:600;">' + F.money(totC - totB) + '</td>' +
       '</tr></tfoot>' +

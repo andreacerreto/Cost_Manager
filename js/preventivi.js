@@ -52,7 +52,7 @@ Pages.preventivi = async function () {
   if (!projs.length) {
     el.innerHTML =
       '<h1>Preventivi Cliente</h1>' +
-      '<div class="alert warn">Nessun progetto. Aggiungine uno in <b>Anagrafica Progetti</b>.</div>';
+      '<div class="alert warn">No projects yet. Add one in <b>Projects</b>.</div>';
     return;
   }
 

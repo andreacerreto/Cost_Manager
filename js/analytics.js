@@ -95,7 +95,7 @@ Pages.anlRenderBep = async function () {
   const attivi = datiProgetti.filter(function (p) { return p.ricavi > 0; });
 
   if (!attivi.length) {
-    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748B;">Nessun progetto con ricavi consuntivati.</div>';
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748B;">No projects with actual revenue yet.</div>';
     return;
   }
 
@@ -266,12 +266,12 @@ Pages._anlShortMoney = function (v) {
  * ================================================================ */
 Pages.anlRenderIncidenza = async function () {
   const el = document.getElementById('anl-content');
-  el.innerHTML = '<p style="color:#64748B;padding:20px;">Caricamento dati...</p>';
+  el.innerHTML = '<p style="color:#64748B;padding:20px;">Loading data...</p>';
 
   const cgRows = await DB.all('cg_budget');
 
   if (!cgRows.length) {
-    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748B;">Nessun dato nei Costi Generali Budget.</div>';
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748B;">No data in Overheads Budget.</div>';
     return;
   }
 
@@ -282,7 +282,7 @@ Pages.anlRenderIncidenza = async function () {
   }).filter(function (v) { return v.totale > 0; });
 
   if (!voci.length) {
-    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748B;">Tutte le voci di Costi Generali sono a zero.</div>';
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748B;">All overhead items are zero.</div>';
     return;
   }
 

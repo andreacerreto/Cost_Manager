@@ -27,18 +27,18 @@ const AutoSave = {
 
     /* Mostra subito la bar in stato "saving" */
     AutoSave.bar.className = 'saving';
-    AutoSave.lbl.textContent = 'Salvataggio\u2026';
+    AutoSave.lbl.textContent = 'Saving...';
 
     /* Pianifica il salvataggio effettivo */
     AutoSave.timers[key] = setTimeout(async function() {
       try {
         await fn();
         AutoSave.bar.className = 'saved';
-        AutoSave.lbl.textContent = 'Salvato \u2713';
+        AutoSave.lbl.textContent = 'Saved';
       } catch (err) {
         console.error('AutoSave error:', err);
         AutoSave.bar.className = 'saving';
-        AutoSave.lbl.textContent = 'Errore salvataggio!';
+        AutoSave.lbl.textContent = 'Save error';
       }
       /* Nasconde la bar dopo 2.5 secondi */
       AutoSave.timers._hide = setTimeout(function() {

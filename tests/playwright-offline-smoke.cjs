@@ -54,7 +54,8 @@ async function main() {
     title: document.title,
     xlsxLoaded: typeof XLSX !== 'undefined',
     activeDashboard: Boolean(document.querySelector('#page-dashboard.active')),
-    loginHidden: getComputedStyle(document.getElementById('login-overlay')).display === 'none',
+    loginRemoved: !document.getElementById('login-overlay') && !document.getElementById('reset-overlay'),
+    onboardingRemoved: !document.getElementById('onboarding-overlay'),
     httpScripts: Array.from(document.scripts)
       .map(script => script.src)
       .filter(src => /^https?:\/\//i.test(src)),
@@ -116,7 +117,8 @@ async function main() {
 
   if (!result.xlsxLoaded) throw new Error('XLSX global is missing.');
   if (!result.activeDashboard) throw new Error('Dashboard is not active after offline startup.');
-  if (!result.loginHidden) throw new Error('Offline login overlay was not dismissed.');
+  if (!result.loginRemoved) throw new Error('Login/reset overlays are still present.');
+  if (!result.onboardingRemoved) throw new Error('Onboarding overlay is still present.');
   if (result.httpScripts.length) throw new Error('HTTP/HTTPS scripts found: ' + result.httpScripts.join(', '));
   if (httpRequests.length) throw new Error('HTTP/HTTPS runtime requests found: ' + httpRequests.join(', '));
   if (pageErrors.length) throw new Error('Page errors: ' + pageErrors.join(' | '));

@@ -8,15 +8,31 @@ const SETTINGS_STORAGE_KEY = 'project_cost_manager_settings_v1';
 const SETTINGS_ALLOWED_LANGUAGES = ['en', 'it'];
 const SETTINGS_ALLOWED_CURRENCIES = ['EUR', 'USD', 'GBP'];
 const SETTINGS_ALLOWED_LOCALES = ['en-US', 'en-GB', 'it-IT'];
+const SETTINGS_ALLOWED_THEMES = ['light', 'dark'];
 const SETTINGS_TEXT_MAX = 500;
+const SETTINGS_TAX_RATE_PRESETS = {
+  en: {
+    locale: 'en-US',
+    tax_label: 'Sales tax',
+    tax_id_label: 'EIN / Tax ID',
+    rates: [0, 4, 5, 6, 7, 8.25, 10],
+  },
+  it: {
+    locale: 'it-IT',
+    tax_label: 'IVA',
+    tax_id_label: 'P.IVA',
+    rates: [0, 4, 10, 22],
+  },
+};
 
 const DEFAULT_SETTINGS = {
   language: 'en',
-  currency: 'EUR',
-  locale: 'en-US',
-  tax_label: 'VAT',
-  tax_id_label: 'VAT ID',
-  tax_rates: [0, 4, 10, 22],
+  currency: 'USD',
+  locale: SETTINGS_TAX_RATE_PRESETS.en.locale,
+  tax_label: SETTINGS_TAX_RATE_PRESETS.en.tax_label,
+  tax_id_label: SETTINGS_TAX_RATE_PRESETS.en.tax_id_label,
+  tax_rates: SETTINGS_TAX_RATE_PRESETS.en.rates.slice(),
+  theme: 'light',
   first_run_done: false,
   last_backup_at: '',
   company: {
@@ -54,18 +70,21 @@ const I18N = {
     'settings.locale': 'Number format',
     'settings.taxLabel': 'Tax label',
     'settings.taxIdLabel': 'Company tax ID label',
-    'settings.taxRates': 'Tax rates (%)',
+    'settings.taxRates': 'Sales tax rates (%)',
     'settings.company': 'Company details',
     'settings.companyName': 'Company name',
     'settings.address': 'Address',
     'settings.postalCode': 'Postal / ZIP code',
     'settings.phone': 'Phone',
     'settings.email': 'Email',
-    'settings.taxId': 'Tax ID',
+    'settings.taxId': 'EIN / Tax ID',
     'settings.save': 'Save settings',
     'settings.saved': 'Settings saved',
     'settings.demo': 'Load demo data',
     'settings.demoHint': 'Replace current data with a small project-based business sample.',
+    'theme.label': 'Dark mode',
+    'theme.light': 'Light mode',
+    'theme.dark': 'Dark mode',
     'backup.title': 'Backup & Restore',
     'backup.subtitle': 'Use Excel for advisors. Use JSON for complete app backup and restore.',
     'backup.excelTitle': 'Excel sharing',
@@ -78,10 +97,6 @@ const I18N = {
     'backup.restoreJson': 'Restore Backup',
     'backup.exportExcel': 'Export Excel',
     'backup.importExcel': 'Import Excel',
-    'onboarding.title': 'Set up Project Cost Manager',
-    'onboarding.subtitle': 'Choose the defaults for your offline workspace.',
-    'onboarding.start': 'Start using the app',
-    'onboarding.demo': 'Load demo data',
     'common.cancel': 'Cancel',
     'common.save': 'Save',
   },
@@ -109,7 +124,7 @@ const I18N = {
     'settings.locale': 'Formato numeri',
     'settings.taxLabel': 'Etichetta imposta',
     'settings.taxIdLabel': 'Etichetta codice fiscale azienda',
-    'settings.taxRates': 'Aliquote imposta (%)',
+    'settings.taxRates': 'Aliquote IVA (%)',
     'settings.company': 'Dati aziendali',
     'settings.companyName': 'Nome azienda',
     'settings.address': 'Indirizzo',
@@ -121,6 +136,9 @@ const I18N = {
     'settings.saved': 'Impostazioni salvate',
     'settings.demo': 'Carica dati demo',
     'settings.demoHint': 'Sostituisce i dati attuali con un esempio per imprese a progetto.',
+    'theme.label': 'Modalita scura',
+    'theme.light': 'Modalita chiara',
+    'theme.dark': 'Modalita scura',
     'backup.title': 'Backup e ripristino',
     'backup.subtitle': 'Usa Excel per i consulenti. Usa JSON per backup e ripristino completo.',
     'backup.excelTitle': 'Condivisione Excel',
@@ -133,10 +151,6 @@ const I18N = {
     'backup.restoreJson': 'Ripristina backup',
     'backup.exportExcel': 'Esporta Excel',
     'backup.importExcel': 'Importa Excel',
-    'onboarding.title': 'Configura Project Cost Manager',
-    'onboarding.subtitle': 'Scegli le impostazioni iniziali del workspace offline.',
-    'onboarding.start': 'Inizia a usare l app',
-    'onboarding.demo': 'Carica dati demo',
     'common.cancel': 'Annulla',
     'common.save': 'Salva',
   },
@@ -159,6 +173,7 @@ const DOM_TRANSLATIONS_EN = {
   'Partita IVA': 'Tax ID',
   'Progetto': 'Project',
   'Cliente': 'Client',
+  'Codice Progetto': 'Project Code',
   'Cod. Progetto': 'Project Code',
   'Nome Progetto': 'Project Name',
   'Data Inizio': 'Start Date',
@@ -214,7 +229,123 @@ const DOM_TRANSLATIONS_EN = {
   'Inviato': 'Sent',
   'Accettato': 'Accepted',
   'Rifiutato': 'Rejected',
+  'Aggiornamento in tempo reale': 'Live update',
+  'KPI Economici': 'Financial KPIs',
+  'Sales tax — Company Summary': 'Sales tax - Company Summary',
+  'Stato Avanzamento Progetti': 'Project Progress Status',
+  'Codice': 'Code',
+  'MARGINE EFF.': 'ACTUAL MARGIN',
+  'MARGINE EFF. %': 'ACTUAL MARGIN %',
+  'Margine Eff.': 'Actual Margin',
+  'Margine Eff. %': 'Actual Margin %',
+  'Margine %': 'Margin %',
+  'CG PREV. / EFF.': 'OVERHEADS PLAN / ACTUAL',
+  'CG Prev. / Eff.': 'Overheads Plan / Actual',
+  'Il': 'The',
+  '(es. PRJ-001) è la chiave univoca di tutto il sistema.': '(for example PRJ-001) is the unique key across the app.',
+  'Il Codice Progetto (es. PRJ-001) è la chiave univoca di tutto il sistema.': 'The Project Code (for example PRJ-001) is the unique key across the app.',
+  '+ Nuovo Progetto': 'New Project',
+  '+ Aggiungi riga costo': 'Add cost row',
+  '+ Aggiungi riga ricavo': 'Add revenue row',
+  '+ Nuova voce': 'New item',
+  'Q.TÀ': 'QTY',
+  'Q.tà': 'Qty',
+  'U.M.': 'Unit',
+  'COSTO UNIT. PREV.': 'PLANNED UNIT COST',
+  'COSTO UNIT. EFF.': 'ACTUAL UNIT COST',
+  'IMPORTO PREV.': 'PLANNED AMOUNT',
+  'IMPORTO EFF.': 'ACTUAL AMOUNT',
+  'Costo Unit. Prev.': 'Planned Unit Cost',
+  'Costo Unit. Eff.': 'Actual Unit Cost',
+  'Importo Prev.': 'Planned Amount',
+  'Importo Eff.': 'Actual Amount',
+  'TOTALE COSTI': 'TOTAL COSTS',
+  'TOTALE RICAVI': 'TOTAL REVENUE',
+  'TOT IVA': 'TOTAL VAT',
+  'Margine Eff.': 'Actual Margin',
+  'Costi fissi indipendenti dai progetti: struttura, personale, utenze.': 'Fixed overhead costs independent from projects: structure, staff, utilities.',
+  'Budget Preventivo': 'Budget',
+  'Gen': 'Jan',
+  'Mag': 'May',
+  'Giu': 'Jun',
+  'Lug': 'Jul',
+  'Ago': 'Aug',
+  'Set': 'Sep',
+  'Ott': 'Oct',
+  'Dic': 'Dec',
+  'GEN': 'JAN',
+  'MAG': 'MAY',
+  'GIU': 'JUN',
+  'LUG': 'JUL',
+  'AGO': 'AUG',
+  'SET': 'SEP',
+  'OTT': 'OCT',
+  'DIC': 'DEC',
+  'Manodopera': 'Labor',
+  'Materiali': 'Materials',
+  'Mezzi': 'Equipment',
+  'Subappalti': 'Subcontracts',
+  'Trasporti': 'Transport',
+  'Altro': 'Other',
+  'Progettazione': 'Design',
+  'Manutenzione ordinaria': 'Routine maintenance',
+  'Manutenzione straordinaria': 'Extraordinary maintenance',
+  'Ristrutturazione area': 'Area renovation',
+  'Intervento tecnico': 'Technical work',
+  'Impianto': 'System',
+  'Allestimento': 'Fit-out',
+  'Pulizia area': 'Area cleaning',
+  'Analisi avanzata: incidenza dei costi generali sui progetti.': 'Advanced analysis: overhead impact on projects.',
+  '🥧 Incidenza Costi Generali': 'Overhead Impact',
+  'Voce di costo generale:': 'Overhead cost item:',
+  'TOTALE VOCE/ANNO': 'TOTAL ITEM/YEAR',
+  '% SU CG AZIENDALI': '% OF COMPANY OVERHEADS',
+  '% SU TUTTI I COSTI': '% OF ALL COSTS',
+  'MEDIA MENSILE': 'MONTHLY AVERAGE',
+  'Totale voce/anno': 'Total item/year',
+  '% su CG aziendali': '% of company overheads',
+  '% su tutti i costi': '% of all costs',
+  'Media mensile': 'Monthly average',
+  'Progetto per nuovo preventivo': 'Project for new quote',
+  'Nessun preventivo ancora generato.': 'No quotes generated yet.',
+  'Questi dati compaiono nell’intestazione di ogni preventivo stampato / PDF.': 'These details appear in the header of each printed quote / PDF.',
+  'Indirizzo (via, città)': 'Address (street, city)',
+  'CAP': 'Postal code',
+  'Telefono': 'Phone',
+  'Imposta la tua stima dei costi generali e del profitto desiderato. L’app calcola automaticamente il markup minimo consigliato che ogni preventivo dovrebbe rispettare per coprire le spese e guadagnare.': 'Set your estimated overheads and target profit. The app automatically calculates the recommended minimum markup each quote should meet to cover expenses and profit.',
+  'Imposta la tua stima dei costi generali e del profitto desiderato. L’app calcola automaticamente il': 'Set your estimated overheads and target profit. The app automatically calculates the',
+  'markup minimo consigliato': 'recommended minimum markup',
+  'che ogni preventivo dovrebbe rispettare per coprire le spese e guadagnare.': 'that each quote should meet to cover expenses and profit.',
+  'Costi generali stimati': 'Estimated overheads',
+  '(% del fatturato annuo)': '(% of annual revenue)',
+  'Profitto desiderato': 'Target profit',
+  '(% sul fatturato)': '(% of revenue)',
+  '⚠️ Markup minimo consigliato (copre costi generali + profitto):': 'Recommended minimum markup (covers overheads + profit):',
+  'Markup per Categoria di Costo': 'Markup by Cost Category',
+  'Imposta la percentuale da aggiungere ai costi diretti per ogni categoria. Puoi sempre modificarla riga per riga al momento di generare il preventivo.': 'Set the percentage to add to direct costs for each category. You can still adjust it line by line when generating a quote.',
+  'MARGINE EQUIV.': 'EQUIV. MARGIN',
+  'Margine equiv.': 'Equiv. margin',
+  '✖ Sotto obiettivo': 'Below target',
+  '↺ Applica markup consigliato a tutte le categorie': 'Apply recommended markup to all categories',
+  '💾 Salva Impostazioni Preventivi': 'Save Pricing Settings',
 };
+
+const DOM_REPLACEMENTS_EN = [
+  [/Aggiornamento in tempo reale/g, 'Live update'],
+  [/(\d+)\s+progetto totali/g, '$1 total project'],
+  [/(\d+)\s+progetti totali/g, '$1 total projects'],
+  [/In corso/g, 'In progress'],
+  [/Pianificato/g, 'Planned'],
+  [/Completato/g, 'Completed'],
+  [/Sospeso/g, 'Paused'],
+  [/Bozza/g, 'Draft'],
+  [/Inviato/g, 'Sent'],
+  [/Accettato/g, 'Accepted'],
+  [/Rifiutato/g, 'Rejected'],
+  [/Distribuzione mensile/g, 'Monthly distribution'],
+  [/\+ Genera Nuovo Preventivo per/g, 'Create New Quote for'],
+  [/Imposta la tua stima dei costi generali e del profitto desiderato\. L.app calcola automaticamente il markup minimo consigliato che ogni preventivo dovrebbe rispettare per coprire le spese e guadagnare\./g, 'Set your estimated overheads and target profit. The app automatically calculates the recommended minimum markup each quote should meet to cover expenses and profit.'],
+];
 
 function _settingsClone(obj) {
   return JSON.parse(JSON.stringify(obj));
@@ -255,6 +386,32 @@ function _settingsEsc(value) {
     .replace(/>/g, '&gt;');
 }
 
+function _settingsT(key, language) {
+  const lang = SETTINGS_ALLOWED_LANGUAGES.includes(language) ? language : DEFAULT_SETTINGS.language;
+  return (I18N[lang] && I18N[lang][key]) || I18N.en[key] || key;
+}
+
+function _settingsTaxPreset(language) {
+  return SETTINGS_TAX_RATE_PRESETS[language] || SETTINGS_TAX_RATE_PRESETS.en;
+}
+
+function _settingsRateId(prefix, rate) {
+  return prefix + 'tax-rate-' + String(rate).replace(/[^0-9]/g, '-');
+}
+
+function _settingsFormatRate(rate, language) {
+  const text = Number.isInteger(rate) ? String(rate) : String(rate);
+  return language === 'it' ? text.replace('.', ',') : text;
+}
+
+function _settingsTranslateEnglish(value) {
+  let translated = DOM_TRANSLATIONS_EN[value] || value;
+  DOM_REPLACEMENTS_EN.forEach(function (entry) {
+    translated = translated.replace(entry[0], entry[1]);
+  });
+  return translated;
+}
+
 function _settingsMerge(settings) {
   const input = settings || {};
   const merged = {
@@ -266,18 +423,20 @@ function _settingsMerge(settings) {
     },
   };
   const language = SETTINGS_ALLOWED_LANGUAGES.includes(merged.language) ? merged.language : DEFAULT_SETTINGS.language;
+  const taxPreset = _settingsTaxPreset(language);
   const currency = SETTINGS_ALLOWED_CURRENCIES.includes(merged.currency) ? merged.currency : DEFAULT_SETTINGS.currency;
   const locale = SETTINGS_ALLOWED_LOCALES.includes(merged.locale)
     ? merged.locale
-    : (language === 'it' ? 'it-IT' : DEFAULT_SETTINGS.locale);
+    : taxPreset.locale;
   const taxRates = _settingsCleanRates(merged.tax_rates);
 
   merged.language = language;
   merged.currency = currency;
   merged.locale = locale;
-  merged.tax_label = _settingsCleanLabel(merged.tax_label, language === 'it' ? 'IVA' : 'VAT');
-  merged.tax_id_label = _settingsCleanLabel(merged.tax_id_label, language === 'it' ? 'P.IVA' : 'Tax ID');
-  merged.tax_rates = taxRates.length ? taxRates : DEFAULT_SETTINGS.tax_rates.slice();
+  merged.tax_label = _settingsCleanLabel(merged.tax_label, taxPreset.tax_label);
+  merged.tax_id_label = _settingsCleanLabel(merged.tax_id_label, taxPreset.tax_id_label);
+  merged.tax_rates = taxRates.length ? taxRates : taxPreset.rates.slice();
+  merged.theme = SETTINGS_ALLOWED_THEMES.includes(merged.theme) ? merged.theme : DEFAULT_SETTINGS.theme;
   merged.first_run_done = Boolean(merged.first_run_done);
   merged.last_backup_at = _settingsCleanText(merged.last_backup_at, '', 80);
   merged.company = {
@@ -321,7 +480,7 @@ const AppSettings = {
 
   t(key) {
     const language = AppSettings.get().language;
-    return (I18N[language] && I18N[language][key]) || I18N.en[key] || key;
+    return _settingsT(key, language);
   },
 
   money(value) {
@@ -330,14 +489,14 @@ const AppSettings = {
     try {
       return new Intl.NumberFormat(settings.locale || 'en-US', {
         style: 'currency',
-        currency: settings.currency || 'EUR',
+        currency: settings.currency || DEFAULT_SETTINGS.currency,
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }).format(Number(value));
     } catch (err) {
       return new Intl.NumberFormat('en-US', {
         style: 'currency',
-        currency: 'EUR',
+        currency: DEFAULT_SETTINGS.currency,
         minimumFractionDigits: 2,
         maximumFractionDigits: 2,
       }).format(Number(value));
@@ -358,15 +517,42 @@ const AppSettings = {
 
   apply() {
     const settings = AppSettings.get();
-    if (window.C) C.IVA = AppSettings.taxRates();
+    if (typeof C !== 'undefined') C.IVA = AppSettings.taxRates();
     document.documentElement.lang = settings.language === 'it' ? 'it' : 'en';
+    if (document.documentElement.dataset) {
+      document.documentElement.dataset.theme = settings.theme;
+    } else if (document.documentElement.setAttribute) {
+      document.documentElement.setAttribute('data-theme', settings.theme);
+    }
     document.title = 'Project Cost Manager';
     document.querySelectorAll('[data-i18n]').forEach(function (el) {
       el.textContent = AppSettings.t(el.dataset.i18n);
     });
     const user = document.getElementById('user-email-lbl');
     if (user) user.textContent = AppSettings.t('offline.user');
+    AppSettings.syncThemeToggle();
     AppSettings.translateDom(document.body);
+  },
+
+  syncThemeToggle() {
+    const settings = AppSettings.get();
+    const toggle = document.getElementById('theme-toggle');
+    const label = document.getElementById('theme-toggle-label');
+    if (!toggle) return;
+    const isDark = settings.theme === 'dark';
+    if (toggle.setAttribute) {
+      toggle.setAttribute('aria-checked', String(isDark));
+      toggle.setAttribute('aria-label', AppSettings.t(isDark ? 'theme.dark' : 'theme.light'));
+    }
+    if (label) label.textContent = AppSettings.t('theme.label');
+  },
+
+  toggleTheme() {
+    const current = AppSettings.get();
+    AppSettings.save({
+      ...current,
+      theme: current.theme === 'dark' ? 'light' : 'dark',
+    });
   },
 
   translateDom(root) {
@@ -385,32 +571,39 @@ const AppSettings = {
     nodes.forEach(function (node) {
       const original = node.nodeValue;
       const trimmed = original.trim();
-      const translated = DOM_TRANSLATIONS_EN[trimmed];
-      if (translated) node.nodeValue = original.replace(trimmed, translated);
+      const translated = _settingsTranslateEnglish(trimmed);
+      if (translated !== trimmed) node.nodeValue = original.replace(trimmed, translated);
     });
 
     root.querySelectorAll?.('input[placeholder], textarea[placeholder]').forEach(function (el) {
-      const translated = DOM_TRANSLATIONS_EN[el.getAttribute('placeholder')];
-      if (translated) el.setAttribute('placeholder', translated);
+      const original = el.getAttribute('placeholder');
+      if (original === null) return;
+      const translated = _settingsTranslateEnglish(original);
+      if (translated !== original) el.setAttribute('placeholder', translated);
     });
   },
 
   collectForm(prefix) {
     const value = id => document.getElementById(prefix + id)?.value?.trim?.() || '';
-    const rates = value('tax-rates')
+    const language = value('language') || 'en';
+    const preset = _settingsTaxPreset(language);
+    const checkedRates = Array.from(document.querySelectorAll('input[name="' + prefix + 'tax-rates"]:checked'))
+      .map(input => Number(String(input.value).trim().replace(',', '.')))
+      .filter(v => Number.isFinite(v));
+    const legacyRates = value('tax-rates')
       .split(',')
       .map(v => Number(String(v).trim().replace(',', '.')))
       .filter(v => Number.isFinite(v));
-    const language = value('language') || 'en';
-    const currency = value('currency') || 'EUR';
+    const rates = checkedRates.length ? checkedRates : legacyRates;
+    const currency = value('currency') || DEFAULT_SETTINGS.currency;
     return {
       ...AppSettings.get(),
       language,
       currency,
-      locale: value('locale') || (language === 'it' ? 'it-IT' : 'en-US'),
-      tax_label: value('tax-label') || (language === 'it' ? 'IVA' : 'VAT'),
-      tax_id_label: value('tax-id-label') || (language === 'it' ? 'P.IVA' : 'VAT ID'),
-      tax_rates: rates.length ? rates : DEFAULT_SETTINGS.tax_rates,
+      locale: value('locale') || preset.locale,
+      tax_label: value('tax-label') || preset.tax_label,
+      tax_id_label: value('tax-id-label') || preset.tax_id_label,
+      tax_rates: rates.length ? rates : preset.rates,
       company: {
         name: value('company-name'),
         address: value('company-address'),
@@ -425,32 +618,79 @@ const AppSettings = {
   formHtml(settings, prefix) {
     const s = _settingsMerge(settings);
     const company = s.company || {};
+    const taxPreset = _settingsTaxPreset(s.language);
+    const selectedRates = s.tax_rates.map(rate => Number(rate));
+    const rateOptions = taxPreset.rates.map(function (rate) {
+      const checked = selectedRates.some(selected => Math.abs(selected - rate) < 0.001);
+      const id = _settingsRateId(prefix, rate);
+      return '<label class="tax-rate-option" for="' + id + '">' +
+        '<input id="' + id + '" type="checkbox" name="' + prefix + 'tax-rates" value="' + rate + '"' + (checked ? ' checked' : '') + '> ' +
+        '<span>' + _settingsEsc(_settingsFormatRate(rate, s.language)) + '%</span>' +
+      '</label>';
+    }).join('');
     return (
+      '<div id="' + prefix + 'settings-form">' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;max-width:860px;">' +
-        '<label><b>' + AppSettings.t('settings.language') + '</b><select id="' + prefix + 'language" style="width:100%;margin-top:6px;">' +
+        '<label><b>' + _settingsT('settings.language', s.language) + '</b><select id="' + prefix + 'language" onchange="AppSettings.changeFormLanguage(\'' + prefix + '\')" style="width:100%;margin-top:6px;">' +
           '<option value="en"' + (s.language === 'en' ? ' selected' : '') + '>English</option>' +
           '<option value="it"' + (s.language === 'it' ? ' selected' : '') + '>Italiano</option>' +
         '</select></label>' +
-        '<label><b>' + AppSettings.t('settings.currency') + '</b><select id="' + prefix + 'currency" style="width:100%;margin-top:6px;">' +
+        '<label><b>' + _settingsT('settings.currency', s.language) + '</b><select id="' + prefix + 'currency" style="width:100%;margin-top:6px;">' +
           ['EUR', 'USD', 'GBP'].map(c => '<option value="' + c + '"' + (s.currency === c ? ' selected' : '') + '>' + c + '</option>').join('') +
         '</select></label>' +
-        '<label><b>' + AppSettings.t('settings.locale') + '</b><select id="' + prefix + 'locale" style="width:100%;margin-top:6px;">' +
+        '<label><b>' + _settingsT('settings.locale', s.language) + '</b><select id="' + prefix + 'locale" style="width:100%;margin-top:6px;">' +
           ['en-US', 'en-GB', 'it-IT'].map(l => '<option value="' + l + '"' + (s.locale === l ? ' selected' : '') + '>' + l + '</option>').join('') +
         '</select></label>' +
-        '<label><b>' + AppSettings.t('settings.taxLabel') + '</b><input id="' + prefix + 'tax-label" value="' + _settingsEsc(s.tax_label) + '" style="width:100%;margin-top:6px;"></label>' +
-        '<label><b>' + AppSettings.t('settings.taxIdLabel') + '</b><input id="' + prefix + 'tax-id-label" value="' + _settingsEsc(s.tax_id_label) + '" style="width:100%;margin-top:6px;"></label>' +
-        '<label><b>' + AppSettings.t('settings.taxRates') + '</b><input id="' + prefix + 'tax-rates" value="' + _settingsEsc(s.tax_rates.join(', ')) + '" style="width:100%;margin-top:6px;"></label>' +
+        '<label><b>' + _settingsT('settings.taxLabel', s.language) + '</b><input id="' + prefix + 'tax-label" value="' + _settingsEsc(s.tax_label) + '" style="width:100%;margin-top:6px;"></label>' +
+        '<label><b>' + _settingsT('settings.taxIdLabel', s.language) + '</b><input id="' + prefix + 'tax-id-label" value="' + _settingsEsc(s.tax_id_label) + '" style="width:100%;margin-top:6px;"></label>' +
+        '<fieldset class="tax-rate-field">' +
+          '<legend>' + _settingsT('settings.taxRates', s.language) + '</legend>' +
+          '<div class="tax-rate-checklist">' + rateOptions + '</div>' +
+        '</fieldset>' +
       '</div>' +
-      '<div class="sec" style="margin-top:24px;">' + AppSettings.t('settings.company') + '</div>' +
+      '<div class="sec" style="margin-top:24px;">' + _settingsT('settings.company', s.language) + '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;max-width:860px;">' +
-        '<label><b>' + AppSettings.t('settings.companyName') + '</b><input id="' + prefix + 'company-name" value="' + _settingsEsc(company.name) + '" style="width:100%;margin-top:6px;"></label>' +
-        '<label><b>' + AppSettings.t('settings.address') + '</b><input id="' + prefix + 'company-address" value="' + _settingsEsc(company.address) + '" style="width:100%;margin-top:6px;"></label>' +
-        '<label><b>' + AppSettings.t('settings.postalCode') + '</b><input id="' + prefix + 'company-postal" value="' + _settingsEsc(company.postal_code) + '" style="width:100%;margin-top:6px;"></label>' +
-        '<label><b>' + AppSettings.t('settings.phone') + '</b><input id="' + prefix + 'company-phone" value="' + _settingsEsc(company.phone) + '" style="width:100%;margin-top:6px;"></label>' +
-        '<label><b>' + AppSettings.t('settings.email') + '</b><input id="' + prefix + 'company-email" value="' + _settingsEsc(company.email) + '" style="width:100%;margin-top:6px;"></label>' +
-        '<label><b>' + AppSettings.t('settings.taxId') + '</b><input id="' + prefix + 'company-tax-id" value="' + _settingsEsc(company.tax_id) + '" style="width:100%;margin-top:6px;"></label>' +
+        '<label><b>' + _settingsT('settings.companyName', s.language) + '</b><input id="' + prefix + 'company-name" value="' + _settingsEsc(company.name) + '" style="width:100%;margin-top:6px;"></label>' +
+        '<label><b>' + _settingsT('settings.address', s.language) + '</b><input id="' + prefix + 'company-address" value="' + _settingsEsc(company.address) + '" style="width:100%;margin-top:6px;"></label>' +
+        '<label><b>' + _settingsT('settings.postalCode', s.language) + '</b><input id="' + prefix + 'company-postal" value="' + _settingsEsc(company.postal_code) + '" style="width:100%;margin-top:6px;"></label>' +
+        '<label><b>' + _settingsT('settings.phone', s.language) + '</b><input id="' + prefix + 'company-phone" value="' + _settingsEsc(company.phone) + '" style="width:100%;margin-top:6px;"></label>' +
+        '<label><b>' + _settingsT('settings.email', s.language) + '</b><input id="' + prefix + 'company-email" value="' + _settingsEsc(company.email) + '" style="width:100%;margin-top:6px;"></label>' +
+        '<label><b>' + _settingsT('settings.taxId', s.language) + '</b><input id="' + prefix + 'company-tax-id" value="' + _settingsEsc(company.tax_id) + '" style="width:100%;margin-top:6px;"></label>' +
+      '</div>' +
       '</div>'
     );
+  },
+
+  changeFormLanguage(prefix) {
+    const language = document.getElementById(prefix + 'language')?.value || DEFAULT_SETTINGS.language;
+    const preset = _settingsTaxPreset(language);
+    const current = AppSettings.collectForm(prefix);
+    const updated = _settingsMerge({
+      ...current,
+      language,
+      locale: preset.locale,
+      tax_label: preset.tax_label,
+      tax_id_label: preset.tax_id_label,
+      tax_rates: preset.rates,
+    });
+    const wrapper = document.getElementById(prefix + 'settings-form');
+    if (wrapper) wrapper.outerHTML = AppSettings.formHtml(updated, prefix);
+    AppSettings.refreshFormLanguage(prefix, language);
+  },
+
+  refreshFormLanguage(prefix, language) {
+    const setText = function (id, key) {
+      const el = document.getElementById(id);
+      if (el) el.textContent = _settingsT(key, language);
+    };
+
+    if (prefix === 'set-') {
+      setText('settings-title', 'settings.title');
+      setText('settings-subtitle', 'settings.subtitle');
+      setText('settings-save-btn', 'settings.save');
+      setText('settings-demo-btn', 'settings.demo');
+      setText('settings-demo-hint', 'settings.demoHint');
+    }
   },
 
   async loadDemoData() {
@@ -486,48 +726,6 @@ const AppSettings = {
     App.go('dashboard');
   },
 
-  showOnboardingIfNeeded() {
-    const settings = AppSettings.get();
-    if (settings.first_run_done || document.getElementById('onboarding-overlay')) return;
-    const overlay = document.createElement('div');
-    overlay.id = 'onboarding-overlay';
-    overlay.style.cssText = 'position:fixed;inset:0;z-index:100000;background:linear-gradient(135deg,#1B4332,#2D6A4F);display:flex;align-items:center;justify-content:center;padding:20px;';
-    overlay.innerHTML =
-      '<div style="background:#fff;border-radius:14px;box-shadow:0 24px 64px rgba(0,0,0,.30);padding:30px;max-width:920px;width:100%;max-height:92vh;overflow:auto;">' +
-        '<h1 style="margin-top:0;color:#1B4332;">' + AppSettings.t('onboarding.title') + '</h1>' +
-        '<p style="color:#64748B;margin-bottom:24px;">' + AppSettings.t('onboarding.subtitle') + '</p>' +
-        AppSettings.formHtml(settings, 'ob-') +
-        '<label style="display:flex;align-items:center;gap:8px;margin-top:20px;color:#334155;">' +
-          '<input type="checkbox" id="ob-demo" checked> ' + AppSettings.t('onboarding.demo') +
-        '</label>' +
-        '<div style="display:flex;justify-content:flex-end;gap:10px;margin-top:26px;">' +
-          '<button class="btn" onclick="AppSettings.finishOnboarding()">' + AppSettings.t('onboarding.start') + '</button>' +
-        '</div>' +
-      '</div>';
-    document.body.appendChild(overlay);
-  },
-
-  async finishOnboarding() {
-    const settings = AppSettings.collectForm('ob-');
-    settings.first_run_done = true;
-    AppSettings.save(settings);
-    const loadDemo = document.getElementById('ob-demo')?.checked;
-    document.getElementById('onboarding-overlay')?.remove();
-    if (loadDemo) {
-      for (const table of Object.keys(TABLE_KEYS)) await DB.clear(table);
-      await DB.insertBatch('anagrafica', [
-        { codice: 'PRJ-001', nome: 'Website redesign', cliente: 'Acme Studio', data_inizio: '01/05/2026', data_fine_prev: '30/06/2026', stato: 'In corso', responsabile: 'Alex', tipologia: 'Progettazione', note: 'Demo' },
-      ]);
-      await DB.insertBatch('budget_costi', [
-        { codice: 'PRJ-001', categoria: 'Manodopera', descrizione: 'Project work', qta: 80, um: 'h', costo_unitario: 45, importo: 3600, aliq_iva: settings.tax_rates[settings.tax_rates.length - 1] || 22, note: '' },
-      ]);
-      await DB.insertBatch('budget_ricavi', [
-        { codice: 'PRJ-001', tipo_ricavo: 'Fixed fee', descrizione: 'Project fee', importo: 8200, aliq_iva: settings.tax_rates[settings.tax_rates.length - 1] || 22, note: '' },
-      ]);
-    }
-    DB.invalidateCache();
-    App.go('dashboard');
-  },
 };
 
 function t(key) {
@@ -544,14 +742,14 @@ Pages.settings = function () {
   const el = document.getElementById('page-settings');
   const settings = AppSettings.get();
   el.innerHTML =
-    '<h1>' + AppSettings.t('settings.title') + '</h1>' +
-    '<p class="subtitle">' + AppSettings.t('settings.subtitle') + '</p>' +
+    '<h1 id="settings-title">' + AppSettings.t('settings.title') + '</h1>' +
+    '<p id="settings-subtitle" class="subtitle">' + AppSettings.t('settings.subtitle') + '</p>' +
     AppSettings.formHtml(settings, 'set-') +
     '<div style="display:flex;gap:10px;margin-top:24px;flex-wrap:wrap;">' +
-      '<button class="btn" onclick="Pages.saveSettings()">' + AppSettings.t('settings.save') + '</button>' +
-      '<button class="btn btn-grey" onclick="AppSettings.loadDemoData()">' + AppSettings.t('settings.demo') + '</button>' +
+      '<button id="settings-save-btn" class="btn" onclick="Pages.saveSettings()">' + AppSettings.t('settings.save') + '</button>' +
+      '<button id="settings-demo-btn" class="btn btn-grey" onclick="AppSettings.loadDemoData()">' + AppSettings.t('settings.demo') + '</button>' +
     '</div>' +
-    '<p style="color:#64748B;font-size:12px;margin-top:8px;">' + AppSettings.t('settings.demoHint') + '</p>' +
+    '<p id="settings-demo-hint" style="color:#64748B;font-size:12px;margin-top:8px;">' + AppSettings.t('settings.demoHint') + '</p>' +
     '<div id="settings-save-msg" style="display:none;color:#2E7D32;font-weight:700;margin-top:12px;"></div>';
 };
 
@@ -576,17 +774,21 @@ Pages.backup = function () {
   el.innerHTML =
     '<h1>' + AppSettings.t('backup.title') + '</h1>' +
     '<p class="subtitle">' + AppSettings.t('backup.subtitle') + '</p>' +
-    '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px;max-width:920px;">' +
-      '<div class="card"><div class="label">' + AppSettings.t('backup.excelTitle') + '</div>' +
-        '<p style="color:#64748B;font-size:13px;">' + AppSettings.t('backup.excelText') + '</p>' +
-        '<button class="btn" onclick="exportExcel()">' + AppSettings.t('backup.exportExcel') + '</button> ' +
-        '<button class="btn btn-grey" onclick="importExcelTrigger()">' + AppSettings.t('backup.importExcel') + '</button>' +
+    '<div class="backup-grid">' +
+      '<div class="card backup-card"><div class="label">' + AppSettings.t('backup.excelTitle') + '</div>' +
+        '<p class="backup-text">' + AppSettings.t('backup.excelText') + '</p>' +
+        '<div class="backup-actions">' +
+          '<button class="btn" onclick="exportExcel()">' + AppSettings.t('backup.exportExcel') + '</button>' +
+          '<button class="btn btn-grey" onclick="importExcelTrigger()">' + AppSettings.t('backup.importExcel') + '</button>' +
+        '</div>' +
       '</div>' +
-      '<div class="card"><div class="label">' + AppSettings.t('backup.jsonTitle') + '</div>' +
-        '<p style="color:#64748B;font-size:13px;">' + AppSettings.t('backup.jsonText') + '</p>' +
-        '<p style="font-size:12px;color:#64748B;"><b>' + AppSettings.t('backup.last') + ':</b> ' + _settingsEsc(last) + '</p>' +
-        '<button class="btn" onclick="exportBackupJson()">' + AppSettings.t('backup.exportJson') + '</button> ' +
-        '<button class="btn btn-grey" onclick="restoreBackupTrigger()">' + AppSettings.t('backup.restoreJson') + '</button>' +
+      '<div class="card backup-card"><div class="label">' + AppSettings.t('backup.jsonTitle') + '</div>' +
+        '<p class="backup-text">' + AppSettings.t('backup.jsonText') + '</p>' +
+        '<p class="backup-last"><b>' + AppSettings.t('backup.last') + ':</b> ' + _settingsEsc(last) + '</p>' +
+        '<div class="backup-actions">' +
+          '<button class="btn" onclick="exportBackupJson()">' + AppSettings.t('backup.exportJson') + '</button>' +
+          '<button class="btn btn-grey" onclick="restoreBackupTrigger()">' + AppSettings.t('backup.restoreJson') + '</button>' +
+        '</div>' +
       '</div>' +
     '</div>';
 };
