@@ -1,5 +1,13 @@
 # Changelog
 
+## Unreleased
+
+- Adopted the **No Tax Core** product direction for the US version.
+- Clarified that Project Cost Manager manages pre-tax / tax-excluded project economics, not tax compliance.
+- Updated documentation to remove Sales Tax positioning from the product scope.
+- Added `docs/CODEX_NO_TAX_REFACTOR_PLAN.md`, a detailed Codex implementation plan for removing active tax UI, calculations, quote fields, KPI cards and Excel tax summaries.
+- Updated shop listing copy to avoid Sales Tax compliance claims.
+
 ## v1.1.0
 
 - Added explicit US country/tax profile with USD, en-US, Sales Tax and EIN / Tax ID defaults.
@@ -8,6 +16,8 @@
 - Added US Sales Tax disclaimer copy to printable quotes.
 - Added `Quote Tax Summary` sheet to Excel exports.
 - Added US quick start and tax handling documentation.
+
+> Note: v1.1.0 tax-related features are scheduled for removal from the active product surface under the No Tax Core refactor.
 
 ## v1.0.0
 
