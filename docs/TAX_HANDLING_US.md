@@ -1,46 +1,50 @@
-# US Sales Tax Handling
+# US Tax Handling Policy
 
-Project Cost Manager supports a conservative offline workflow for US users:
+Project Cost Manager intentionally does **not** handle US Sales Tax.
 
-- `Country / tax profile: United States`
-- `USD`
-- `en-US`
-- `Sales Tax`
-- manual Sales Tax rate presets
-- quote-level `Tax exempt`, customer state/county, and Sales Tax note fields
-- `Quote Tax Summary` sheet in Excel exports
+The product follows a **No Tax Core** policy: all operational amounts should be treated as pre-tax / tax-excluded values. Tax calculation, tax compliance and tax filing workflows are outside the app scope.
 
 ## What The App Does
 
-- Estimates Sales Tax from the rate entered by the user.
-- Rounds taxable base, tax amount and total to cents.
-- Records whether a quote is tax exempt.
-- Records the customer state/county or jurisdiction note.
-- Exports quote tax metadata for review by an accountant or tax advisor.
+- Tracks project costs, revenue, actuals, overheads, margins and variance.
+- Builds client-facing printable quotes using pre-tax / tax-excluded amounts.
+- Exports operational data to Excel for review by accountants, consultants or advisors.
+- Creates and restores JSON backups of local app data.
+- Keeps data offline in the browser profile.
 
 ## What The App Does Not Do
 
-- It does not look up rates automatically.
-- It does not decide whether a product or service is taxable.
-- It does not determine nexus, registration, filing, resale certificate or exemption rules.
-- It does not replace a certified tax engine, accountant, attorney or state tax authority.
+- It does not calculate Sales Tax or use tax.
+- It does not look up state, county, city or district tax rates.
+- It does not determine whether a product, service, project, quote or customer is taxable.
+- It does not manage tax-exempt customers, resale certificates, exemption certificates or certificate expiration.
+- It does not determine nexus, economic thresholds, registrations, filing obligations, filing periods or remittances.
+- It does not create a Sales Tax ledger, payable account, return worksheet or compliance report.
+- It does not replace an accountant, tax advisor, attorney, state tax authority or certified tax engine.
 
-## Why Rates Are Manual
+## Quote Wording
 
-US sales tax is state and local. The IRS sales tax calculator FAQ notes that many ZIP codes can include more than one local taxing jurisdiction, and state/local business tax obligations differ by jurisdiction. For current obligations, use official state tax authority resources or a qualified advisor.
+Recommended default wording for quote printouts:
 
-Official references:
+> Amounts shown are pre-tax. Taxes, if applicable, are excluded unless expressly stated.
 
-- IRS Sales Tax Deduction Calculator FAQ: https://www.irs.gov/salestax
-- SBA Pay Taxes guide: https://www.sba.gov/business-guide/manage-your-business/pay-taxes
-- SBA federal and state tax ID guide: https://www.sba.gov/business-guide/launch-your-business/get-federal-state-tax-id-numbers
+This note keeps the quote clear without implying that Project Cost Manager performs tax calculations.
 
-## Recommended Quote Workflow
+## Why Tax Is Out Of Scope
 
-1. Confirm whether the customer/project is taxable with your advisor or state tax authority.
-2. Enter the applicable manual Sales Tax rate in the quote line.
-3. Fill `Customer state / county`.
-4. Check `Tax exempt` only when you have a valid basis and documentation.
-5. Use `Sales Tax note` to record the source or assumption.
-6. Export Excel and keep the `Quote Tax Summary` sheet with your records.
+US Sales Tax varies by state, local jurisdiction, product/service taxability, customer status, seller nexus, marketplace facilitation rules and filing obligations. Supporting this correctly would require a much more complex tax/compliance product, and would not fit the current offline lightweight scope.
 
+Project Cost Manager should remain a project economics tool, not a tax engine.
+
+## Implementation Direction
+
+The application code should be refactored so that:
+
+- tax rate presets are removed from user-facing settings;
+- tax columns are removed from Budget, Actuals and Quotes;
+- tax KPI cards are removed from Dashboard, Budget, Actuals, Variance and Analytics;
+- the Excel export no longer contains a `Quote Tax Summary` sheet;
+- legacy tax fields may remain tolerated during import/backup restore for backward compatibility, but should not be shown, recalculated or exported as active product features;
+- documentation and shop listing should describe the app as pre-tax / tax-excluded.
+
+See `docs/CODEX_NO_TAX_REFACTOR_PLAN.md` for the detailed implementation plan.
