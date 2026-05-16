@@ -14,13 +14,24 @@ actuals, overheads and client quotes. No subscription. No account. Excel export 
 - Works offline from a ZIP file.
 - Tracks budget vs actuals by project.
 - Calculates margins and variance.
+- Tracks overheads.
 - Builds client-facing printable quotes.
+- Uses pre-tax / tax-excluded quote amounts.
 - Exports Excel workbooks for consultants and accountants.
 - Includes JSON backup and restore.
-- US-only English interface.
-- Configurable currency and tax labels.
-- US manual Sales Tax mode with tax-exempt and state/county notes.
+- US-oriented English interface.
+- USD and en-US number formatting.
+- Configurable company details for quotes and exports.
 
-## Compliance Note
+## Tax Scope Note
 
-The app helps users estimate, document and export manually entered Sales Tax. It does not provide automatic sales tax compliance, rate lookup, nexus determination, filing support or legal/tax advice.
+Project Cost Manager is not a tax or compliance application. It does not calculate Sales Tax, look up tax rates, determine taxability, manage exemptions, monitor nexus or support tax filing. Taxes, if applicable, should be handled outside the app.
+
+Recommended quote wording:
+
+> Amounts shown are pre-tax. Taxes, if applicable, are excluded unless expressly stated.
+
+## Suggested Price
+
+Launch price: 5 EUR  
+Standard price: 9 EUR
