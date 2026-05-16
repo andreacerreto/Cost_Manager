@@ -63,6 +63,15 @@ const EXCEL_LEGACY_TAX_FIELDS = new Set([
   'tax_note',
 ]);
 
+const EXCEL_QUOTE_TAX_FIELDS = new Set([
+  'tax_rate',
+  'tax_exempt',
+  'tax_jurisdiction',
+  'tax_note',
+]);
+
+const EXCEL_QUOTE_TAX_TABLES = new Set(['preventivi', 'preventivi_righe']);
+
 function _downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
   const a = document.createElement('a');
@@ -105,11 +114,14 @@ function _overheadTotal(row) {
   return C.MESIK.reduce((sum, m) => sum + (+source[m] || 0), 0);
 }
 
-function _stripLegacyTaxFields(rows) {
+function _stripLegacyTaxFields(rows, table) {
+  const keepQuoteTax = EXCEL_QUOTE_TAX_TABLES.has(table);
   return (rows || []).map(function (row) {
     const out = {};
     Object.entries(row || {}).forEach(function (entry) {
-      if (!EXCEL_LEGACY_TAX_FIELDS.has(entry[0])) out[entry[0]] = entry[1];
+      if (!EXCEL_LEGACY_TAX_FIELDS.has(entry[0]) || (keepQuoteTax && EXCEL_QUOTE_TAX_FIELDS.has(entry[0]))) {
+        out[entry[0]] = entry[1];
+      }
     });
     return out;
   });
@@ -199,7 +211,7 @@ async function exportExcel() {
     const table = entry[0], sheet = entry[1];
     const rows = await DB.all(table);
     const operationalRows = table.startsWith('cg_') ? _flattenOverheads(rows) : rows;
-    _appendSheet(wb, _stripLegacyTaxFields(operationalRows), sheet);
+    _appendSheet(wb, _stripLegacyTaxFields(operationalRows, table), sheet);
   }
 
   _appendSheet(wb, await _varianceRows(), 'Variance Analysis');

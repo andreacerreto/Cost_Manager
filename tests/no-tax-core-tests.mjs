@@ -4,7 +4,6 @@ import path from 'node:path';
 import vm from 'node:vm';
 
 const root = path.resolve(import.meta.dirname, '..');
-const PRE_TAX_NOTE = 'Amounts shown are pre-tax. Taxes, if applicable, are excluded unless expressly stated.';
 
 function createContext() {
   const storage = new Map();
@@ -104,7 +103,7 @@ async function testTotalsIgnoreLegacyTaxRates() {
   });
 }
 
-async function testQuoteTemplateIsPreTaxOnly() {
+async function testQuoteTemplateKeepsQuoteTaxWorkflow() {
   const context = createContext();
   load(context, ['js/config.js', 'js/settings.js', 'js/helpers.js', 'js/preventivi.js']);
 
@@ -115,15 +114,19 @@ async function testQuoteTemplateIsPreTaxOnly() {
     noteCliente: 'Consulting package',
     righeHTML: '',
     totImp: 1000,
+    totTax: 82.5,
+    totFinale: 1082.5,
+    taxExempt: false,
+    taxJurisdiction: 'CA / Los Angeles County',
+    taxNote: 'Manual estimate',
     azienda: { nome: 'Demo Co', indirizzo: '', cap: '', tel: '', email: '', taxId: '12-3456789' }
   })`);
 
-  assert.match(html, new RegExp(PRE_TAX_NOTE.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')));
-  assert.match(html, /Total pre-tax/i);
-  assert.doesNotMatch(html, /Sales Tax handling/i);
-  assert.doesNotMatch(html, /Tax exempt/i);
-  assert.doesNotMatch(html, /Total incl\./i);
-  assert.doesNotMatch(html, /Tax %/i);
+  assert.match(html, /Sales Tax handling/i);
+  assert.match(html, /Sales Tax is manually entered by the user for this quote/i);
+  assert.match(html, /Total incl\. Sales Tax/i);
+  assert.match(html, /CA \/ Los Angeles County/i);
+  assert.match(html, /Manual estimate/i);
 }
 
 async function testExcelHasNoActiveTaxSheetsOrMetrics() {
@@ -142,11 +145,34 @@ async function testExcelHasNoActiveTaxSheetsOrMetrics() {
   assert(varianceRows.every(row => !Object.keys(row).some(key => key.toLowerCase().includes('tax'))));
 }
 
+async function testExcelPreservesQuoteTaxFieldsOnly() {
+  const context = createContext();
+  load(context, ['js/config.js', 'js/database.js', 'js/settings.js', 'js/helpers.js', 'js/excel.js']);
+
+  const budgetRows = plain(get(context, `_stripLegacyTaxFields([
+    { codice: 'PRJ-1', importo: 100, tax_rate: 8.25, tax_exempt: true }
+  ], 'budget_costi')`));
+  const quoteRows = plain(get(context, `_stripLegacyTaxFields([
+    { preventivo_id: 1, importo: 100, tax_rate: 8.25, tax_exempt: true, tax_jurisdiction: 'CA', tax_note: 'Manual' }
+  ], 'preventivi_righe')`));
+
+  assert.deepEqual(budgetRows, [{ codice: 'PRJ-1', importo: 100 }]);
+  assert.deepEqual(quoteRows, [{
+    preventivo_id: 1,
+    importo: 100,
+    tax_rate: 8.25,
+    tax_exempt: true,
+    tax_jurisdiction: 'CA',
+    tax_note: 'Manual',
+  }]);
+}
+
 const tests = [
   testSettingsIgnoreLegacyTaxFields,
   testTotalsIgnoreLegacyTaxRates,
-  testQuoteTemplateIsPreTaxOnly,
+  testQuoteTemplateKeepsQuoteTaxWorkflow,
   testExcelHasNoActiveTaxSheetsOrMetrics,
+  testExcelPreservesQuoteTaxFieldsOnly,
 ];
 
 for (const test of tests) {
