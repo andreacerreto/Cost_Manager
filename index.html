@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,15 +10,15 @@
   <!-- CSS -->
   <link rel="stylesheet" href="css/style.css">
 
-  <!-- CSS stampa: nasconde colonne interne e sidebar durante window.print() -->
+  <!-- Print CSS: hides internal columns and navigation during window.print(). -->
   <style>
     @media print {
-      /* Nasconde tutta l'interfaccia tranne il preventivo */
+      /* Hide the app shell and internal quote controls. */
       #sidebar, #save-bar, .proj-bar, .btn-add,
-      [data-role="cu"],          /* input costo interno */
-      th:nth-child(5),           /* intestazione colonna Costo Int. */
-      td:nth-child(5),           /* celle colonna Costo Int. */
-      #prev-recap,               /* riepilogo margine interno */
+      [data-role="cu"],          /* internal cost input */
+      th:nth-child(5),           /* internal cost header */
+      td:nth-child(5),           /* internal cost cells */
+      #prev-recap,               /* internal margin summary */
       button { display: none !important; }
 
       #main { margin-left: 0 !important; padding: 10px !important; }
@@ -27,132 +27,6 @@
   </style>
 </head>
 <body>
-
-  <!-- ============================================================
-       OVERLAY LOGIN
-       ============================================================ -->
-  <div id="login-overlay" style="
-    position:fixed; inset:0;
-    background:linear-gradient(135deg,#1B4332,#2D6A4F);
-    z-index:99999; display:flex;
-    align-items:center; justify-content:center;">
-
-    <div style="background:#fff;border-radius:20px;padding:44px 48px;
-      min-width:340px;max-width:400px;width:90%;
-      box-shadow:0 24px 64px rgba(0,0,0,.30);text-align:center;">
-
-      <div style="display:flex;align-items:center;justify-content:center;gap:12px;margin-bottom:6px;">
-        <div style="width:44px;height:44px;background:#D8F3DC;border-radius:12px;
-          display:flex;align-items:center;justify-content:center;">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <path d="M12 21C7 21 3.5 17 3.5 12.5 3.5 8 6.5 4 12 2c5.5 2 8.5 6 8.5 10.5C20.5 17 17 21 12 21z" fill="#52B788"/>
-            <path d="M12 20V7" stroke="#F9A825" stroke-width="1.8" stroke-linecap="round"/>
-            <path d="M12 10 C10 9.5 8 10 7 11.5" stroke="#F9A825" stroke-width="1.1" stroke-linecap="round" opacity=".8"/>
-            <path d="M12 13.5 C10 13 8 13.5 7 15" stroke="#F9A825" stroke-width="1.1" stroke-linecap="round" opacity=".8"/>
-            <path d="M12 10 C14 9.5 16 10 17 11.5" stroke="#F9A825" stroke-width="1.1" stroke-linecap="round" opacity=".8"/>
-            <path d="M12 13.5 C14 13 16 13.5 17 15" stroke="#F9A825" stroke-width="1.1" stroke-linecap="round" opacity=".8"/>
-          </svg>
-        </div>
-        <div style="text-align:left;">
-          <div style="font-size:18px;font-weight:700;color:#1B4332;line-height:1.2;">Project Cost Manager</div>
-          <div style="font-size:12px;color:#64748B;">Offline project control</div>
-        </div>
-      </div>
-
-      <p style="color:#64748B;font-size:13px;margin-bottom:28px;margin-top:16px;">Offline workspace</p>
-
-      <input id="login-email" type="email" placeholder="Email"
-        style="width:100%;padding:12px 14px;border:1.5px solid #E8ECEE;border-radius:8px;
-          font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;
-          font-family:'Segoe UI',Arial,sans-serif;transition:border-color .15s;"
-        onfocus="this.style.borderColor='#52B788'" onblur="this.style.borderColor='#E8ECEE'"
-        onkeydown="if(event.key==='Enter') document.getElementById('login-pass').focus()"/>
-
-      <input id="login-pass" type="password" placeholder="Password"
-        style="width:100%;padding:12px 14px;border:1.5px solid #E8ECEE;border-radius:8px;
-          font-size:14px;margin-bottom:8px;outline:none;box-sizing:border-box;
-          font-family:'Segoe UI',Arial,sans-serif;transition:border-color .15s;"
-        onfocus="this.style.borderColor='#52B788'" onblur="this.style.borderColor='#E8ECEE'"
-        onkeydown="if(event.key==='Enter') doLogin()"/>
-
-      <div id="login-error" style="display:none;color:#C62828;font-size:12px;
-        margin-bottom:10px;font-weight:600;text-align:left;"></div>
-
-      <div style="text-align:right;margin-bottom:22px;">
-        <a onclick="doForgotPassword()" style="font-size:12px;color:#2D6A4F;cursor:pointer;"
-          onmouseover="this.style.textDecoration='underline'"
-          onmouseout="this.style.textDecoration='none'">Password dimenticata?</a>
-      </div>
-
-      <button onclick="doLogin()" style="width:100%;padding:13px;background:#1B4332;
-        color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;
-        cursor:pointer;font-family:'Segoe UI',Arial,sans-serif;transition:background .2s;
-        display:flex;align-items:center;justify-content:center;gap:8px;"
-        onmouseover="this.style.background='#2D6A4F'"
-        onmouseout="this.style.background='#1B4332'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
-          stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M15 3h4a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-4"/>
-          <polyline points="10 17 15 12 10 7"/><line x1="15" y1="12" x2="3" y2="12"/>
-        </svg>
-        Accedi
-      </button>
-
-      <p style="margin-top:20px;font-size:11px;color:#B0BEC5;">
-        Offline version &middot; no account required
-      </p>
-    </div>
-  </div>
-
-  <!-- ============================================================
-       OVERLAY RESET PASSWORD
-       ============================================================ -->
-  <div id="reset-overlay" style="display:none;position:fixed;inset:0;
-    background:linear-gradient(135deg,#1B4332,#2D6A4F);
-    z-index:99999;align-items:center;justify-content:center;">
-
-    <div style="background:#fff;border-radius:20px;padding:44px 48px;
-      min-width:340px;max-width:400px;width:90%;
-      box-shadow:0 24px 64px rgba(0,0,0,.30);text-align:center;">
-
-      <div style="width:52px;height:52px;background:#D8F3DC;border-radius:14px;
-        display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
-        <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="#1B4332"
-          stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
-          <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
-        </svg>
-      </div>
-
-      <h2 style="color:#1B4332;font-size:20px;margin-bottom:6px;">Imposta password</h2>
-      <p style="color:#64748B;font-size:13px;margin-bottom:28px;">Scegli una password sicura (minimo 6 caratteri)</p>
-
-      <input id="reset-pass" type="password" placeholder="Nuova password"
-        style="width:100%;padding:12px 14px;border:1.5px solid #E8ECEE;border-radius:8px;
-          font-size:14px;margin-bottom:12px;outline:none;box-sizing:border-box;
-          font-family:'Segoe UI',Arial,sans-serif;"
-        onfocus="this.style.borderColor='#52B788'" onblur="this.style.borderColor='#E8ECEE'"
-        onkeydown="if(event.key==='Enter') document.getElementById('reset-pass2').focus()"/>
-
-      <input id="reset-pass2" type="password" placeholder="Conferma password"
-        style="width:100%;padding:12px 14px;border:1.5px solid #E8ECEE;border-radius:8px;
-          font-size:14px;margin-bottom:8px;outline:none;box-sizing:border-box;
-          font-family:'Segoe UI',Arial,sans-serif;"
-        onfocus="this.style.borderColor='#52B788'" onblur="this.style.borderColor='#E8ECEE'"
-        onkeydown="if(event.key==='Enter') doSetPassword()"/>
-
-      <div id="reset-error" style="display:none;color:#C62828;font-size:12px;
-        margin-bottom:14px;font-weight:600;text-align:left;"></div>
-      <div id="reset-ok" style="display:none;color:#1B5E20;font-size:13px;
-        margin-bottom:14px;font-weight:600;">&#10003; Password impostata! Accesso in corso&hellip;</div>
-
-      <button onclick="doSetPassword()" style="width:100%;padding:13px;background:#1B4332;
-        color:#fff;border:none;border-radius:8px;font-size:15px;font-weight:700;
-        cursor:pointer;font-family:'Segoe UI',Arial,sans-serif;transition:background .2s;"
-        onmouseover="this.style.background='#2D6A4F'"
-        onmouseout="this.style.background='#1B4332'">Salva password</button>
-    </div>
-  </div>
 
   <!-- ============================================================
        SIDEBAR
@@ -201,10 +75,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         <span data-i18n="nav.analytics">Analytics</span></a>
 
-      <!-- Separatore sezione Preventivi -->
+      <!-- Quotes section separator -->
       <div style="margin:10px 18px;border-top:1px solid rgba(255,255,255,.10);"></div>
 
-      <!-- Voce: Preventivi Cliente -->
+      <!-- Customer Quotes -->
       <a onclick="App.go('preventivi')"       id="nav-preventivi">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -215,7 +89,7 @@
         </svg>
         <span data-i18n="nav.quotes">Quotes</span></a>
 
-      <!-- Voce: Impostazioni Preventivi (ex Impostazioni Prezzi) -->
+      <!-- Pricing Settings -->
       <a onclick="App.go('politicaprezzi')"   id="nav-politicaprezzi">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
@@ -231,7 +105,7 @@
         </svg>
         <span data-i18n="nav.pricing">Pricing Settings</span></a>
 
-      <!-- Separatore utilità -->
+      <!-- Utility separator -->
       <div style="margin:10px 18px;border-top:1px solid rgba(255,255,255,.10);"></div>
 
       <a onclick="exportExcel()"         id="nav-export">
@@ -257,6 +131,13 @@
     </nav>
 
     <div class="sidebar-footer">
+      <div class="theme-toggle-row">
+        <span id="theme-toggle-label" data-i18n="theme.label">Dark mode</span>
+        <button id="theme-toggle" class="theme-toggle" type="button" role="switch"
+          aria-checked="false" aria-label="Light mode" onclick="AppSettings.toggleTheme()">
+          <span class="theme-toggle-knob"></span>
+        </button>
+      </div>
       <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px;">
         <div id="user-avatar" style="width:34px;height:34px;border-radius:50%;
           background:var(--amber);color:#1B4332;display:flex;align-items:center;
@@ -294,11 +175,11 @@
        ============================================================ -->
   <div id="save-bar">
     <div class="dot"></div>
-    <span id="save-label">Salvato</span>
+    <span id="save-label">Saved</span>
   </div>
 
   <!-- ============================================================
-       AREA PRINCIPALE — pagine renderizzate via JS
+       MAIN AREA - pages rendered by JS
        ============================================================ -->
   <div id="main">
     <div id="page-dashboard"      class="page active"></div>
@@ -308,21 +189,21 @@
     <div id="page-varianze"       class="page"></div>
     <div id="page-costigenerali"  class="page"></div>
     <div id="page-analytics"      class="page"></div>
-    <!-- Modulo Preventivi -->
+    <!-- Quotes module -->
     <div id="page-preventivi"     class="page"></div>
     <div id="page-politicaprezzi" class="page"></div>
     <div id="page-backup"         class="page"></div>
     <div id="page-settings"       class="page"></div>
   </div>
 
-  <!-- Input nascosto per import Excel -->
+  <!-- Hidden inputs for imports/restores -->
   <input type="file" id="import-excel-input" accept=".xlsx,.xls"
     style="display:none" onchange="importExcel(event)">
   <input type="file" id="restore-backup-input" accept=".json"
     style="display:none" onchange="restoreBackupJson(event)">
 
   <!-- ============================================================
-       JAVASCRIPT — ordine di caricamento critico
+       JAVASCRIPT - load order matters
        ============================================================ -->
   <script src="js/config.js"></script>
   <script src="js/database.js"></script>
@@ -338,7 +219,7 @@
   <script src="vendor/sheetjs/xlsx.full.min.js"></script>
   <script src="js/excel.js"></script>
   <script src="js/analytics.js"></script>
-  <!-- Modulo Preventivi (caricato dopo budget.js da cui dipende per i pattern) -->
+  <!-- Quotes module, loaded after budget.js for shared patterns -->
   <script src="js/politicaprezzi.js"></script>
   <script src="js/preventivi.js"></script>
   <script src="js/app.js"></script>

@@ -23,27 +23,27 @@ Pages.anagrafica = async function () {
       '<td><input data-orig="' + F.esc(r.codice) + '" value="' + F.esc(r.codice) + '" placeholder="PRJ-001"></td>' +
       '<td><input value="' + F.esc(r.nome) + '"></td>' +
       '<td><input value="' + F.esc(r.cliente) + '"></td>' +
-      '<td><input value="' + F.esc(r.data_inizio) + '" placeholder="GG/MM/AAAA"></td>' +
-      '<td><input value="' + F.esc(r.data_fine_prev) + '" placeholder="GG/MM/AAAA"></td>' +
+      '<td><input value="' + F.esc(r.data_inizio) + '" placeholder="YYYY-MM-DD"></td>' +
+      '<td><input value="' + F.esc(r.data_fine_prev) + '" placeholder="YYYY-MM-DD"></td>' +
       '<td><select>' + F.sel(C.STATI, r.stato) + '</select></td>' +
       '<td><input value="' + F.esc(r.responsabile) + '"></td>' +
       '<td><select>' + F.sel(C.TIPOLOGIE, r.tipologia) + '</select></td>' +
       '<td><input value="' + F.esc(r.note) + '"></td>' +
-      '<td><button class="btn-red" data-codice="' + F.esc(r.codice) + '" onclick="Pages.anaDelRow(this)">Elimina</button></td>' +
+      '<td><button class="btn-red" data-codice="' + F.esc(r.codice) + '" onclick="Pages.anaDelRow(this)">Delete</button></td>' +
     '</tr>';
   }
 
   el.innerHTML =
-    '<h1>Anagrafica Progetti</h1>' +
-    '<p class="subtitle">Il <b>Codice Progetto</b> (es. PRJ-001) \u00e8 la chiave univoca di tutto il sistema.</p>' +
+    '<h1>Projects</h1>' +
+    '<p class="subtitle">The <b>Project Code</b> (for example PRJ-001) is the unique key used across the app.</p>' +
     '<div class="toolbar">' +
-      '<button class="btn btn-grey" onclick="Pages.anaAddRow()">+ Nuovo Progetto</button>' +
+      '<button class="btn btn-grey" onclick="Pages.anaAddRow()">+ New Project</button>' +
     '</div>' +
     '<div class="tbl-wrap"><table>' +
       '<thead><tr>' +
-        '<th>Cod. Progetto</th><th>Nome Progetto</th><th>Cliente</th>' +
-        '<th>Data Inizio</th><th>Data Fine Prev.</th><th>Stato</th>' +
-        '<th>Responsabile</th><th>Tipologia</th><th>Note</th><th></th>' +
+        '<th>Project Code</th><th>Project Name</th><th>Customer</th>' +
+        '<th>Start Date</th><th>Planned End Date</th><th>Status</th>' +
+        '<th>Owner</th><th>Type</th><th>Notes</th><th></th>' +
       '</tr></thead>' +
       '<tbody id="ana-body">' + data.map(row).join('') + '</tbody>' +
     '</table></div>';
@@ -100,7 +100,7 @@ Pages.anaAddRow = async function () {
   await DB.put('anagrafica', {
     codice, nome: '', cliente: '',
     data_inizio: '', data_fine_prev: '',
-    stato: 'Pianificato', responsabile: '', tipologia: '', note: '',
+    stato: 'Planned', responsabile: '', tipologia: '', note: '',
   });
   Pages.anagrafica();
 };
@@ -116,7 +116,7 @@ Pages.anaAddRow = async function () {
  * ------------------------------------------------------------ */
 Pages.anaDelRow = async function (btn, codice) {
   codice = codice || btn.dataset.codice || '';
-  if (!confirm('Eliminare il progetto "' + codice + '"?\nEliminati anche tutti i dati di budget e consuntivo.')) return;
+  if (!confirm('Delete project "' + codice + '"?\nAll budget and actuals data will also be deleted.')) return;
 
   /* Elimina anagrafica e le 4 tabelle dettaglio in parallelo */
   await Promise.all([

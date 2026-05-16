@@ -2,7 +2,7 @@
 
 /* ============================================================
  * COSTIGENERALI.JS — Renderer e logica della pagina
- * Costi Generali Aziendali. Tre tab: Budget, Consuntivo,
+ * Company overheads. Three tabs: Budget, Actuals,
  * Varianza. Autosave su ogni modifica.
  * NOTA: nomi tabella con underscore — cg_budget, cg_consuntivo
  * ============================================================ */
@@ -11,17 +11,37 @@ Pages.costigenerali = async function() {
   const el = document.getElementById('page-costigenerali');
 
   el.innerHTML =
-    '<h1>Costi Generali Aziendali</h1>' +
-    '<p class="subtitle">Costi fissi indipendenti dai progetti: struttura, personale, utenze.</p>' +
+    '<h1>Company Overheads</h1>' +
+    '<p class="subtitle">Fixed costs outside individual projects: structure, staff, and utilities.</p>' +
     '<div class="tabs">' +
-      '<div class="tab' + (App.cgTab === 'budget'     ? ' active' : '') + '" onclick="Pages.cgTab(this, \'budget\')">Budget Preventivo</div>' +
-      '<div class="tab' + (App.cgTab === 'consuntivo' ? ' active' : '') + '" onclick="Pages.cgTab(this, \'consuntivo\')">Consuntivo Effettivo</div>' +
-      '<div class="tab' + (App.cgTab === 'varianza'   ? ' active' : '') + '" onclick="Pages.cgTab(this, \'varianza\')">Varianza</div>' +
+      '<div class="tab' + (App.cgTab === 'budget'     ? ' active' : '') + '" onclick="Pages.cgTab(this, \'budget\')">Budget</div>' +
+      '<div class="tab' + (App.cgTab === 'consuntivo' ? ' active' : '') + '" onclick="Pages.cgTab(this, \'consuntivo\')">Actuals</div>' +
+      '<div class="tab' + (App.cgTab === 'varianza'   ? ' active' : '') + '" onclick="Pages.cgTab(this, \'varianza\')">Variance</div>' +
     '</div>' +
     '<div id="cg-content"></div>';
 
   await Pages.cgRender(App.cgTab);
 };
+
+const CG_ITEM_TRANSLATIONS_EN = {
+  'Stipendi fissi': 'Fixed salaries',
+  'Contributi previdenziali': 'Payroll taxes and benefits',
+  'Affitto sede / magazzino': 'Office / warehouse rent',
+  'Utenze': 'Utilities',
+  'Carburante mezzi aziendali': 'Company vehicle fuel',
+  'Manutenzione attrezzature': 'Equipment maintenance',
+  'Assicurazioni': 'Insurance',
+  'Software e abbonamenti': 'Software and subscriptions',
+  'Consulenze amministrative / legali': 'Administrative / legal consulting',
+  'Materiale consumabile generico': 'General consumables',
+  'Spese di rappresentanza': 'Representation expenses',
+  'Formazione e aggiornamento': 'Training and development',
+  'Altre spese generali': 'Other overhead expenses',
+};
+
+function cgDisplayItemName(value) {
+  return CG_ITEM_TRANSLATIONS_EN[value] || value || '';
+}
 
 /* Cambia tab attivo */
 Pages.cgTab = async function(tabEl, tab) {
@@ -47,7 +67,7 @@ Pages.cgRender = async function(tab) {
   let data = await DB.all('cg_' + tab);
   if (!data.length) {
     data = C.VOCICG.map(function(v) {
-      const obj = { voce: v, aliq_iva: F.defaultTaxRate() };
+      const obj = { voce: v };
       C.MESIK.forEach(function(m) { obj[m] = 0; });
       return obj;
     });
@@ -55,7 +75,7 @@ Pages.cgRender = async function(tab) {
 
   /* Garantisce almeno tante righe quante le voci predefinite */
   while (data.length < C.VOCICG.length) {
-    const obj = { voce: '', aliq_iva: F.defaultTaxRate() };
+    const obj = { voce: '' };
     C.MESIK.forEach(function(m) { obj[m] = 0; });
     data.push(obj);
   }
@@ -64,33 +84,29 @@ Pages.cgRender = async function(tab) {
   function row(r) {
     const tot = C.MESIK.reduce(function(a, m) { return a + (+r[m] || 0); }, 0);
     return '<tr>' +
-      '<td><input data-role="voce" value="' + F.esc(r.voce) + '" class="w-lg"></td>' +
+      '<td><input data-role="voce" value="' + F.esc(cgDisplayItemName(r.voce)) + '" class="w-lg"></td>' +
       C.MESIK.map(function(m) {
         return '<td><input data-role="' + m + '" type="number" value="' + (r[m] || '') + '" step="0.01" min="0" class="w-mes"></td>';
       }).join('') +
-      '<td><select data-role="iva">' + F.sel(C.IVA, r.aliq_iva ?? F.defaultTaxRate()) + '</select></td>' +
       '<td data-role="tot-row" class="r" style="font-weight:600;">' + F.money(tot) + '</td>' +
-      '<td data-role="iva-row" class="r iva">' + F.money(tot * F.iva(r.aliq_iva ?? F.defaultTaxRate())) + '</td>' +
     '</tr>';
   }
 
   el.innerHTML =
     '<div class="tbl-wrap" style="overflow-x:auto;"><table>' +
       '<thead><tr>' +
-        '<th>Voce di Costo</th>' +
+        '<th>Cost Item</th>' +
         C.MESIL.map(function(m) { return '<th>' + m + '</th>'; }).join('') +
-        '<th class="iva">' + F.esc(F.taxLabel()) + ' %</th><th>TOT ANNO</th><th class="iva">' + F.esc(F.taxLabel()) + ' Ann.</th>' +
+        '<th>Year Total</th>' +
       '</tr></thead>' +
       '<tbody id="cg-body">' + data.map(row).join('') + '</tbody>' +
       '<tfoot><tr>' +
-        '<td><b>TOTALI</b></td>' +
+        '<td><b>TOTALS</b></td>' +
         C.MESIK.map(function(m) { return '<td id="cg-col-' + m + '" class="r"></td>'; }).join('') +
-        '<td></td>' +
         '<td id="cg-grand-tot" class="r" style="font-weight:600;"></td>' +
-        '<td id="cg-grand-iva" class="r iva" style="font-weight:600;"></td>' +
       '</tr></tfoot>' +
     '</table></div>' +
-    '<button class="btn-add" onclick="Pages.cgAddRow(\'' + tab + '\')">+ Nuova voce</button>';
+    '<button class="btn-add" onclick="Pages.cgAddRow(\'' + tab + '\')">New item</button>';
 
   Pages.cgRecalc();
 
@@ -106,14 +122,13 @@ Pages.cgRender = async function(tab) {
   });
 };
 
-/* Ricalcola totali colonne, grand total e IVA */
+/* Recalculates column totals and grand total. */
 Pages.cgRecalc = function() {
   const colTots = {};
   C.MESIK.forEach(function(m) { colTots[m] = 0; });
-  let gt = 0, gi = 0;
+  let gt = 0;
 
   document.querySelectorAll('#cg-body tr').forEach(function(row) {
-    const iva = F.iva(row.querySelector('[data-role="iva"]')?.value ?? F.defaultTaxRate());
     const tot = C.MESIK.reduce(function(a, m) {
       const v = +(row.querySelector('[data-role="' + m + '"]')?.value) || 0;
       colTots[m] += v;
@@ -122,11 +137,8 @@ Pages.cgRecalc = function() {
 
     const totEl = row.querySelector('[data-role="tot-row"]');
     if (totEl) totEl.textContent = F.money(tot);
-    const ivaEl = row.querySelector('[data-role="iva-row"]');
-    if (ivaEl) ivaEl.textContent = F.money(tot * iva);
 
     gt += tot;
-    gi += tot * iva;
   });
 
   /* Aggiorna celle tfoot */
@@ -136,13 +148,11 @@ Pages.cgRecalc = function() {
   });
   const gtEl = document.getElementById('cg-grand-tot');
   if (gtEl) gtEl.textContent = F.money(gt);
-  const giEl = document.getElementById('cg-grand-iva');
-  if (giEl) giEl.textContent = F.money(gi);
 };
 
 /* Aggiunge una riga vuota */
 Pages.cgAddRow = function(tab) {
-  const obj = { voce: '', aliq_iva: F.defaultTaxRate() };
+  const obj = { voce: '' };
   C.MESIK.forEach(function(m) { obj[m] = 0; });
 
   document.getElementById('cg-body').insertAdjacentHTML('beforeend',
@@ -151,9 +161,7 @@ Pages.cgAddRow = function(tab) {
       C.MESIK.map(function(m) {
         return '<td><input data-role="' + m + '" type="number" step="0.01" min="0" class="w-mes"></td>';
       }).join('') +
-      '<td><select data-role="iva">' + F.sel(C.IVA, F.defaultTaxRate()) + '</select></td>' +
       '<td data-role="tot-row" class="r" style="font-weight:600;">' + F.money(0) + '</td>' +
-      '<td data-role="iva-row" class="r iva">' + F.money(0) + '</td>' +
     '</tr>'
   );
 };
@@ -163,8 +171,7 @@ Pages.cgSave = async function(tab) {
   const batch = [];
   for (const row of document.querySelectorAll('#cg-body tr')) {
     const voce = row.querySelector('[data-role="voce"]')?.value?.trim() ?? '';
-    const iva  = row.querySelector('[data-role="iva"]')?.value ?? String(F.defaultTaxRate());
-    const obj  = { voce, aliq_iva: iva };
+    const obj  = { voce };
     C.MESIK.forEach(function(m) {
       obj[m] = +(row.querySelector('[data-role="' + m + '"]')?.value) || 0;
     });
@@ -190,7 +197,7 @@ Pages.cgVarianza = async function() {
     totB += tb; totC += tc;
 
     return '<tr>' +
-      '<td>' + F.esc(b.voce || c.voce || '') + '</td>' +
+      '<td>' + F.esc(cgDisplayItemName(b.voce || c.voce || '')) + '</td>' +
       C.MESIK.map(function(m) {
         const v = (+c[m] || 0) - (+b[m] || 0);
         return '<td class="r ' + F.cls(v, true) + '">' + (v ? F.money(v) : '\u2014') + '</td>';
@@ -208,13 +215,13 @@ Pages.cgVarianza = async function() {
   document.getElementById('cg-content').innerHTML =
     '<div class="tbl-wrap" style="overflow-x:auto;"><table>' +
       '<thead><tr>' +
-        '<th>Voce di Costo</th>' +
+        '<th>Cost Item</th>' +
         C.MESIL.map(function(m) { return '<th>' + m + '</th>'; }).join('') +
-        '<th>TOT ANNO</th>' +
+        '<th>Year Total</th>' +
       '</tr></thead>' +
       '<tbody>' + rows.join('') + '</tbody>' +
       '<tfoot><tr>' +
-        '<td><b>TOTALE</b></td>' +
+        '<td><b>TOTAL</b></td>' +
         colDelta +
         '<td class="r ' + F.cls(totC - totB, true) + '" style="font-weight:600;">' + F.money(totC - totB) + '</td>' +
       '</tr></tfoot>' +

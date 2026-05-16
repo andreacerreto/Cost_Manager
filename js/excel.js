@@ -18,16 +18,6 @@ const EXCEL_OPERATIONAL_SHEETS = {
   'Quotes': 'preventivi',
   'Quote Lines': 'preventivi_righe',
 
-  /* Backward compatible Italian sheet names */
-  'Anagrafica': 'anagrafica',
-  'Budget Costi': 'budget_costi',
-  'Budget Ricavi': 'budget_ricavi',
-  'Consuntivo Costi': 'consuntivo_costi',
-  'Consuntivo Ricavi': 'consuntivo_ricavi',
-  'CG Budget': 'cg_budget',
-  'CG Consuntivo': 'cg_consuntivo',
-  'Preventivi': 'preventivi',
-  'Preventivi Righe': 'preventivi_righe',
 };
 
 const EXCEL_EXPORT_TABLES = [
@@ -59,8 +49,28 @@ const CALCULATED_SHEETS = new Set([
   'Dashboard Summary',
   'Variance Analysis',
   'Settings',
-  'Varianze',
 ]);
+
+const EXCEL_LEGACY_TAX_FIELDS = new Set([
+  'tax_rate',
+  'tax_label',
+  'tax_id_label',
+  'tax_rates',
+  'tax_disclaimer',
+  'tax_mode',
+  'tax_exempt',
+  'tax_jurisdiction',
+  'tax_note',
+]);
+
+const EXCEL_QUOTE_TAX_FIELDS = new Set([
+  'tax_rate',
+  'tax_exempt',
+  'tax_jurisdiction',
+  'tax_note',
+]);
+
+const EXCEL_QUOTE_TAX_TABLES = new Set(['preventivi', 'preventivi_righe']);
 
 function _downloadBlob(blob, filename) {
   const url = URL.createObjectURL(blob);
@@ -104,12 +114,25 @@ function _overheadTotal(row) {
   return C.MESIK.reduce((sum, m) => sum + (+source[m] || 0), 0);
 }
 
+function _stripLegacyTaxFields(rows, table) {
+  const keepQuoteTax = EXCEL_QUOTE_TAX_TABLES.has(table);
+  return (rows || []).map(function (row) {
+    const out = {};
+    Object.entries(row || {}).forEach(function (entry) {
+      if (!EXCEL_LEGACY_TAX_FIELDS.has(entry[0]) || (keepQuoteTax && EXCEL_QUOTE_TAX_FIELDS.has(entry[0]))) {
+        out[entry[0]] = entry[1];
+      }
+    });
+    return out;
+  });
+}
+
 async function _dashboardSummaryRows() {
   const ana = await DB.all('anagrafica');
   const bulk = await DB.allBulk(['budget_costi', 'budget_ricavi', 'consuntivo_costi', 'consuntivo_ricavi']);
   const cgB = (await DB.all('cg_budget')).reduce((a, r) => a + _overheadTotal(r), 0);
   const cgC = (await DB.all('cg_consuntivo')).reduce((a, r) => a + _overheadTotal(r), 0);
-  let budgetCosts = 0, actualCosts = 0, budgetRevenue = 0, actualRevenue = 0, budgetTax = 0, actualTax = 0;
+  let budgetCosts = 0, actualCosts = 0, budgetRevenue = 0, actualRevenue = 0;
 
   for (const p of ana) {
     const b = await totali('budget', p.codice, bulk);
@@ -118,8 +141,6 @@ async function _dashboardSummaryRows() {
     actualCosts += e.costi;
     budgetRevenue += b.ricavi;
     actualRevenue += e.ricavi;
-    budgetTax += b.ivanetta;
-    actualTax += e.ivanetta;
   }
 
   return [
@@ -130,12 +151,9 @@ async function _dashboardSummaryRows() {
     { Metric: 'Actual Costs', Value: actualCosts },
     { Metric: 'Budget Margin', Value: budgetRevenue - budgetCosts },
     { Metric: 'Actual Margin', Value: actualRevenue - actualCosts },
-    { Metric: 'Budget Tax Net', Value: budgetTax },
-    { Metric: 'Actual Tax Net', Value: actualTax },
     { Metric: 'Overheads Budget', Value: cgB },
     { Metric: 'Overheads Actual', Value: cgC },
     { Metric: 'Currency', Value: AppSettings.get().currency },
-    { Metric: 'Tax Label', Value: AppSettings.taxLabel() },
   ];
 }
 
@@ -157,8 +175,6 @@ async function _varianceRows() {
       'Budget Margin': b.margine,
       'Actual Margin': e.margine,
       'Margin Variance': e.margine - b.margine,
-      'Budget Tax Net': b.ivanetta,
-      'Actual Tax Net': e.ivanetta,
     };
   }));
 }
@@ -166,12 +182,10 @@ async function _varianceRows() {
 function _settingsRows() {
   const settings = AppSettings.get();
   return [
+    { Key: 'country_profile', Value: settings.country_profile },
     { Key: 'language', Value: settings.language },
     { Key: 'currency', Value: settings.currency },
     { Key: 'locale', Value: settings.locale },
-    { Key: 'tax_label', Value: settings.tax_label },
-    { Key: 'tax_id_label', Value: settings.tax_id_label },
-    { Key: 'tax_rates', Value: settings.tax_rates.join(', ') },
     { Key: 'company_name', Value: settings.company.name },
     { Key: 'company_address', Value: settings.company.address },
     { Key: 'company_postal_code', Value: settings.company.postal_code },
@@ -196,7 +210,8 @@ async function exportExcel() {
   for (const entry of EXCEL_EXPORT_TABLES) {
     const table = entry[0], sheet = entry[1];
     const rows = await DB.all(table);
-    _appendSheet(wb, table.startsWith('cg_') ? _flattenOverheads(rows) : rows, sheet);
+    const operationalRows = table.startsWith('cg_') ? _flattenOverheads(rows) : rows;
+    _appendSheet(wb, _stripLegacyTaxFields(operationalRows, table), sheet);
   }
 
   _appendSheet(wb, await _varianceRows(), 'Variance Analysis');
@@ -380,12 +395,6 @@ async function restoreBackupJson(event) {
     AppSettings.save(backup.settings || {
       ...DEFAULT_SETTINGS,
       first_run_done: true,
-      language: 'it',
-      currency: 'EUR',
-      locale: 'it-IT',
-      tax_label: 'IVA',
-      tax_id_label: 'P.IVA',
-      tax_rates: [0, 4, 10, 22],
     });
 
     DB.invalidateCache();

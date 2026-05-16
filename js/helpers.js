@@ -1,9 +1,8 @@
-﻿'use strict';
+'use strict';
 
 /* ============================================================
- * HELPERS.JS — Funzioni di utilità pure (nessuna dipendenza
- * da DOM o storage locale). Usate ovunque nell'app.
- * F.money, F.pct, F.esc, F.iva, F.sel, F.kpi, F.cls
+ * HELPERS.JS - Pure utility functions with no DOM or storage dependency.
+ * F.money, F.pct, F.esc, F.roundMoney, F.sel, F.kpi, F.cls
  * ============================================================ */
 
 const F = {
@@ -29,11 +28,11 @@ const F = {
       .replace(/>/g, '&gt;');
   },
 
-  /* Converte un valore aliquota IVA in moltiplicatore decimale
-     Es: "22" → 0.22 | "10" → 0.10 */
-  iva(s) {
-    try { return parseFloat(String(s).replace(',', '.')) / 100; }
-    catch { return 0; }
+  roundMoney(v) {
+    const n = Number(v);
+    if (!Number.isFinite(n)) return 0;
+    const adjusted = n + (n < 0 ? -1 : 1) * 1e-9;
+    return Number((Math.round(adjusted * 100) / 100).toFixed(2));
   },
 
   /* Genera le <option> di un <select> con selezione corrente evidenziata */
@@ -43,17 +42,8 @@ const F = {
     ).join('');
   },
 
-  taxLabel() {
-    return window.AppSettings ? AppSettings.taxLabel() : 'Tax';
-  },
-
   taxIdLabel() {
     return window.AppSettings ? AppSettings.taxIdLabel() : 'Tax ID';
-  },
-
-  defaultTaxRate() {
-    const rates = window.AppSettings ? AppSettings.taxRates() : C.IVA;
-    return rates.includes(22) ? 22 : (rates[rates.length - 1] ?? 0);
   },
 
   /* Genera l'HTML di una KPI card semplice (senza icon-box) */
@@ -146,7 +136,7 @@ const ImportSafety = {
 window.ImportSafety = ImportSafety;
 
 /* ============================================================
- * TOTALI — Calcola ricavi, costi, margine e IVA di un progetto.
+ * TOTALS - Calculates revenue, costs, and margin for a project.
  *
  * VERSIONE OTTIMIZZATA v2 (dev_ottimizzazione):
  *   Accetta un parametro opzionale `bulk` con i dati già caricati
@@ -191,15 +181,9 @@ async function totali(prefix, codice, bulk) {
 
   const tc = sum(costi,  'importo');
   const tr = sum(ricavi, 'importo');
-  const ic = costi.reduce( (a, r) => a + (+r.importo || 0) * F.iva(r.aliq_iva ?? F.defaultTaxRate()), 0);
-  const ir = ricavi.reduce((a, r) => a + (+r.importo || 0) * F.iva(r.aliq_iva ?? F.defaultTaxRate()), 0);
-
   return {
     costi:     tc,
     ricavi:    tr,
     margine:   tr - tc,
-    ivacosti:  ic,
-    ivaricavi: ir,
-    ivanetta:  ir - ic,
   };
 }

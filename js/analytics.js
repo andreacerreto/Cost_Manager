@@ -31,9 +31,9 @@ Pages.analytics = async function () {
    * ---------------------------------------------------------- */
   el.innerHTML =
     '<h1>Analytics</h1>' +
-    '<p class="subtitle">Analisi avanzata: incidenza dei costi generali sui progetti.</p>' +
+    '<p class="subtitle">Advanced analysis of overhead impact across projects.</p>' +
     '<div class="tabs">' +
-      '<div class="tab active" onclick="Pages.anlTab(this,\'incidenza\')" >&#129383; Incidenza Costi Generali</div>' +
+      '<div class="tab active" onclick="Pages.anlTab(this,\'incidenza\')" >Overhead Impact</div>' +
     '</div>' +
     '<div id="anl-content"></div>';
 
@@ -95,7 +95,7 @@ Pages.anlRenderBep = async function () {
   const attivi = datiProgetti.filter(function (p) { return p.ricavi > 0; });
 
   if (!attivi.length) {
-    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748B;">Nessun progetto con ricavi consuntivati.</div>';
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748B;">No projects with actual revenue yet.</div>';
     return;
   }
 
@@ -262,27 +262,27 @@ Pages._anlShortMoney = function (v) {
 --- FINE BLOCCO BEP DISABILITATO --- */
 
 /* ================================================================
- * SEZIONE ATTIVA — INCIDENZA COSTI GENERALI
+ * ACTIVE SECTION - OVERHEAD IMPACT
  * ================================================================ */
 Pages.anlRenderIncidenza = async function () {
   const el = document.getElementById('anl-content');
-  el.innerHTML = '<p style="color:#64748B;padding:20px;">Caricamento dati...</p>';
+  el.innerHTML = '<p style="color:#64748B;padding:20px;">Loading data...</p>';
 
   const cgRows = await DB.all('cg_budget');
 
   if (!cgRows.length) {
-    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748B;">Nessun dato nei Costi Generali Budget.</div>';
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748B;">No data in Overheads Budget.</div>';
     return;
   }
 
   /* Filtra le voci con almeno un valore > 0 */
   const voci = cgRows.map(function (r) {
     const tot = C.MESIK.reduce(function (a, m) { return a + (+r[m] || 0); }, 0);
-    return { voce: r.voce || '(senza nome)', totale: tot, dati: r };
+    return { voce: r.voce || '(unnamed)', totale: tot, dati: r };
   }).filter(function (v) { return v.totale > 0; });
 
   if (!voci.length) {
-    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748B;">Tutte le voci di Costi Generali sono a zero.</div>';
+    el.innerHTML = '<div style="padding:40px;text-align:center;color:#64748B;">All overhead items are zero.</div>';
     return;
   }
 
@@ -294,7 +294,7 @@ Pages.anlRenderIncidenza = async function () {
 
   el.innerHTML =
     '<div style="margin-bottom:22px;display:flex;align-items:center;gap:14px;flex-wrap:wrap;">' +
-      '<label style="font-weight:600;color:#1B4332;font-size:14px;">Voce di costo generale:</label>' +
+      '<label style="font-weight:600;color:#1B4332;font-size:14px;">Overhead item:</label>' +
       '<select id="anl-select-voce" onchange="Pages.anlAggiornaTorta()" style="padding:8px 14px;border:1.5px solid #CBD5E1;border-radius:8px;font-size:14px;font-family:var(--font);color:#334155;background:#fff;cursor:pointer;">' + opts + '</select>' +
     '</div>' +
     '<div id="anl-torta-container"></div>';
@@ -319,8 +319,8 @@ Pages.anlAggiornaTorta = async function () {
   /* Fette della torta: voce selezionata / altri CG / costi variabili */
   const fette = [
     { label: voce.voce,              valore: voce.totale,            colore: '#F9A825' },
-    { label: 'Altri Costi Generali', valore: totaleCG - voce.totale, colore: '#D8F3DC' },
-    { label: 'Costi Var. Progetti',  valore: totaleCostiVar,         colore: '#1B4332' },
+    { label: 'Other Overheads',      valore: totaleCG - voce.totale, colore: '#D8F3DC' },
+    { label: 'Project Direct Costs', valore: totaleCostiVar,         colore: '#1B4332' },
   ].filter(function (f) { return f.valore > 0; });
 
   const torta        = Pages._anlTortaSvg(fette, grandTotal);
@@ -341,10 +341,10 @@ Pages.anlAggiornaTorta = async function () {
 
   const kpiHtml =
     '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-bottom:22px;">' +
-    F.kpi('Totale voce/anno',   F.money(voce.totale),       null, '') +
-    F.kpi('% su CG aziendali',  F.pct(pctVoceSuCG),         null, '') +
-    F.kpi('% su tutti i costi', F.pct(pctVoceSuTot),        null, '') +
-    F.kpi('Media mensile',      F.money(voce.totale / 12),  null, '') +
+    F.kpi('Item total / year',   F.money(voce.totale),       null, '') +
+    F.kpi('% of overheads',      F.pct(pctVoceSuCG),         null, '') +
+    F.kpi('% of all costs',      F.pct(pctVoceSuTot),        null, '') +
+    F.kpi('Monthly average',     F.money(voce.totale / 12),  null, '') +
     '</div>';
 
   document.getElementById('anl-torta-container').innerHTML =
@@ -352,7 +352,7 @@ Pages.anlAggiornaTorta = async function () {
     '<div style="display:flex;gap:32px;flex-wrap:wrap;align-items:flex-start;">' +
       '<div style="flex:0 0 auto;">' + torta + '</div>' +
       '<div style="flex:1;min-width:280px;">' +
-        '<h3 style="color:#1B4332;font-size:14px;margin-bottom:12px;">Distribuzione mensile \u2014 ' + F.esc(voce.voce) + '</h3>' +
+        '<h3 style="color:#1B4332;font-size:14px;margin-bottom:12px;">Monthly distribution - ' + F.esc(voce.voce) + '</h3>' +
         '<div style="display:flex;gap:6px;align-items:flex-end;height:120px;padding:0 4px;">' + spark + '</div>' +
       '</div>' +
     '</div>';

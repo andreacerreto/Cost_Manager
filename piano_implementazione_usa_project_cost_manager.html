@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Piano implementazione USA - Project Cost Manager</title>
+  <style>
+    :root{
+      --green:#1B4332; --green2:#2D6A4F; --mint:#D8F3DC; --line:#E2E8F0;
+      --bg:#F8FAFC; --text:#102A43; --muted:#64748B; --amber:#F9A825;
+      --blue:#2563EB; --red:#B91C1C; --card:#FFFFFF;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;font-family:Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text);line-height:1.55}
+    header{background:linear-gradient(135deg,var(--green),var(--green2));color:white;padding:44px 22px}
+    .wrap{max-width:1120px;margin:0 auto}
+    h1{font-size:34px;margin:0 0 10px}
+    h2{font-size:24px;margin:34px 0 14px;color:var(--green)}
+    h3{font-size:18px;margin:0 0 10px}
+    p{margin:0 0 12px}
+    .subtitle{font-size:17px;color:#D8F3DC;max-width:850px}
+    .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+    .grid2{display:grid;grid-template-columns:repeat(2,1fr);gap:16px}
+    .card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:0 8px 24px rgba(15,23,42,.06)}
+    .badge{display:inline-block;padding:5px 10px;border-radius:999px;font-size:12px;font-weight:700;background:var(--mint);color:var(--green);margin-bottom:10px}
+    .badge.warn{background:#FEF3C7;color:#92400E}
+    .badge.red{background:#FEE2E2;color:#991B1B}
+    .badge.blue{background:#DBEAFE;color:#1D4ED8}
+    .score{font-size:30px;font-weight:800;color:var(--green);margin:4px 0}
+    ul{padding-left:18px;margin:8px 0 0}
+    li{margin:6px 0}
+    table{width:100%;border-collapse:collapse;background:white;border-radius:16px;overflow:hidden;border:1px solid var(--line)}
+    th,td{padding:12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+    th{background:#ECFDF5;color:var(--green);font-size:13px}
+    tr:last-child td{border-bottom:0}
+    .timeline{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:12px}
+    .step{background:white;border:1px solid var(--line);border-radius:16px;padding:14px;position:relative}
+    .step strong{display:block;color:var(--green);margin-bottom:6px}
+    .note{border-left:5px solid var(--amber);background:#FFFBEB;padding:14px;border-radius:12px}
+    .decision{border-left:5px solid var(--green);background:#F0FDF4;padding:14px;border-radius:12px}
+    footer{margin:34px 0 24px;color:var(--muted);font-size:13px}
+    @media(max-width:900px){.grid,.grid2,.timeline{grid-template-columns:1fr} h1{font-size:28px}}
+  </style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Piano implementazione USA</h1>
+    <p class="subtitle">Adattamento di Project Cost Manager al mercato statunitense, dalla soluzione più semplice alla più completa, mantenendo il DNA offline dell’app.</p>
+  </div>
+</header>
+
+<main class="wrap">
+  <section>
+    <h2>Direzione consigliata</h2>
+    <div class="decision">
+      <p><strong>Scelta pragmatica:</strong> partire con l’Opzione 2, cioè una modalità USA guidata con Sales Tax manuale per preventivo/progetto, disclaimer chiaro, preset base e report/export leggibili. È il miglior compromesso tra valore percepito, rischio fiscale, velocità di rilascio e coerenza con l’app offline.</p>
+    </div>
+  </section>
+
+  <section>
+    <h2>Le 4 opzioni</h2>
+    <div class="grid">
+      <div class="card">
+        <span class="badge">Opzione 1</span>
+        <h3>Re-label minimo</h3>
+        <p>Usa le impostazioni esistenti: valuta USD, locale en-US, tax label “Sales Tax”.</p>
+        <div class="score">★☆☆☆</div>
+        <p>Tempo basso, rischio basso, valore USA limitato.</p>
+      </div>
+      <div class="card">
+        <span class="badge blue">Opzione 2</span>
+        <h3>USA Mode guidato</h3>
+        <p>Preset USA, aliquota manuale, campi stato/cliente, quote tax-ready e note compliance.</p>
+        <div class="score">★★★☆</div>
+        <p>La versione consigliata per il primo rilascio US.</p>
+      </div>
+      <div class="card">
+        <span class="badge warn">Opzione 3</span>
+        <h3>Sales Tax ledger</h3>
+        <p>Storico vendite per Stato, monitoraggio soglie nexus e dashboard compliance.</p>
+        <div class="score">★★★☆</div>
+        <p>Più utile per seller digitali che crescono.</p>
+      </div>
+      <div class="card">
+        <span class="badge red">Opzione 4</span>
+        <h3>Motore tax avanzato</h3>
+        <p>Rate table, taxability, sourcing, regole per Stato, aggiornamenti periodici o API/MoR.</p>
+        <div class="score">★★★★</div>
+        <p>Valore alto, ma rompe la semplicità offline.</p>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Confronto sintetico</h2>
+    <table>
+      <thead><tr><th>Opzione</th><th>Cosa implementa</th><th>Vantaggi</th><th>Svantaggi</th><th>Quando usarla</th></tr></thead>
+      <tbody>
+        <tr><td>1. Re-label minimo</td><td>USD, en-US, Sales Tax, EIN / Tax ID.</td><td>Rilascio immediato, quasi nessun refactor.</td><td>Non differenzia abbastanza il prodotto.</td><td>Hotfix o test di vendita.</td></tr>
+        <tr><td>2. USA Mode guidato</td><td>Wizard, preset fiscali manuali, quote più chiare, export US-friendly.</td><td>Buon valore commerciale, basso rischio legale.</td><td>Non calcola automaticamente aliquote locali.</td><td>Primo vero lancio USA.</td></tr>
+        <tr><td>3. Sales Tax ledger</td><td>Vendite per Stato, soglie, alert, report CSV/XLSX.</td><td>Aiuta chi vende in più Stati.</td><td>Aggiunge complessità e manutenzione normativa.</td><td>Dopo feedback utenti US.</td></tr>
+        <tr><td>4. Motore avanzato/API</td><td>Calcolo per ZIP/Stato, taxability, nexus, integrazione MoR/API.</td><td>Massimo valore, più scalabile.</td><td>Costi, aggiornamenti, possibile perdita del modello offline.</td><td>Versione Pro o prodotto online separato.</td></tr>
+      </tbody>
+    </table>
+  </section>
+
+  <section>
+    <h2>Roadmap consigliata</h2>
+    <div class="timeline">
+      <div class="step"><strong>Fase 1</strong>Congelare il perimetro: non consulenza fiscale, solo supporto gestionale.</div>
+      <div class="step"><strong>Fase 2</strong>Implementare USA Mode con preset e campi localizzati.</div>
+      <div class="step"><strong>Fase 3</strong>Aggiornare preventivi, stampe ed export Excel.</div>
+      <div class="step"><strong>Fase 4</strong>Creare demo data USA e documentazione commerciale.</div>
+      <div class="step"><strong>Fase 5</strong>Dopo vendita, valutare ledger e nexus tracker.</div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Moduli da toccare</h2>
+    <div class="grid2">
+      <div class="card">
+        <h3>Core app</h3>
+        <ul>
+          <li>settings.js: profilo paese, valuta, locale, tax label, tax ID label.</li>
+          <li>helpers.js: funzioni tax con base imponibile, aliquota manuale, rounding.</li>
+          <li>preventivi.js: campi Sales Tax, Tax Exempt, state/county note.</li>
+          <li>excel.js: export con colonne US leggibili.</li>
+        </ul>
+      </div>
+      <div class="card">
+        <h3>UX e documentazione</h3>
+        <ul>
+          <li>Microcopy: “set your applicable rate; verify with your accountant”.</li>
+          <li>Quick start US e demo data per contractor/consultant.</li>
+          <li>Pagina “Tax handling” nel manuale.</li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section>
+    <h2>Rischi da evitare</h2>
+    <div class="note">
+      <p>Non promettere “automatic sales tax compliance” nella versione offline. Il sistema USA è statale e locale, le soglie nexus cambiano e il software può essere tassabile diversamente da Stato a Stato. Per una prima versione commerciale è meglio essere chiari: l’app aiuta a stimare, documentare ed esportare, non sostituisce un commercialista o un motore fiscale certificato.</p>
+    </div>
+  </section>
+
+  <footer>
+    Visualizzazione statica generata per Project Cost Manager. Nessuno script esterno, nessun CDN.
+  </footer>
+</main>
+</body>
+</html>

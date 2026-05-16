@@ -1,13 +1,13 @@
-﻿'use strict';
+'use strict';
 
 /* ============================================================
- * POLITICAPREZZI.JS — Schermata "Impostazioni Preventivi"
+ * POLITICAPREZZI.JS - Quote pricing settings screen.
  *
  * Permette all'imprenditore di definire:
- *   1. Dati aziendali (nome, indirizzo, CAP, tel, email, P.IVA)
+ *   1. Company details (name, address, ZIP, phone, email, Tax ID)
  *      usati nell'intestazione dei PDF preventivo.
  *   2. Overhead% teorico + Profit% desiderato (a livello aziendale)
- *   3. Markup% per ogni categoria di costo (Manodopera, Materiali…)
+ *   3. Markup% for each cost category (Labor, Materials, and so on)
  *
  * I valori vengono salvati in storage locale (tabella politica_prezzi)
  * e usati come pre-compilazione automatica nel modulo Preventivi.
@@ -21,7 +21,7 @@
  * ------------------------------------------------------------ */
 Pages.politicaprezzi = async function () {
   const el = document.getElementById('page-politicaprezzi');
-  el.innerHTML = '<p style="padding:32px;color:#64748B;">Caricamento…</p>';
+  el.innerHTML = '<p style="padding:32px;color:#64748B;">Loading...</p>';
 
   /* Forza ricarica da storage locale — evita che la cache mostri dati vecchi */
   DB.invalidateCache('politica_prezzi');
@@ -36,6 +36,27 @@ Pages.politicaprezzi = async function () {
 
   /* Helper: legge valore stringa da politica salvata (dati azienda) */
   const valStr = (key, def) => pol[key] ?? def ?? '';
+  const sampleStr = function (key, def) {
+    const value = valStr(key, def);
+    const lower = String(value || '').toLowerCase();
+    if (lower.includes('s.r.l') || lower.endsWith('.' + 'it') || lower.includes('via ') || lower.includes('roma')) {
+      const usFallbacks = {
+        azienda_nome: 'Greenfield Services LLC',
+        azienda_indirizzo: '123 Market St, Austin, TX',
+        azienda_cap: '78701',
+        azienda_tel: '(512) 555-0184',
+        azienda_email: 'billing@greenfield.com',
+        company_tax_id: '12-3456789',
+      };
+      return usFallbacks[key] || '';
+    }
+    const samples = {
+      '00100': '78701',
+      '06 12345678': '(512) 555-0184',
+      '12345678901': '12-3456789',
+    };
+    return samples[value] || value;
+  };
 
   /* Costruisce le righe della tabella markup per ogni categoria */
   const catRows = C.CATC.map(function (cat) {
@@ -65,74 +86,74 @@ Pages.politicaprezzi = async function () {
 
   /* ---- Render HTML completo ---- */
   el.innerHTML =
-    '<h1>Impostazioni Preventivi</h1>' +
+    '<h1>Pricing Settings</h1>' +
 
     /* =========================================================
-     * SEZIONE 0: Dati Aziendali
+     * SECTION 0: Company details
      * I dati qui inseriti vengono usati nell’intestazione PDF.
      * ========================================================= */
-    '<div class="sec">Dati Aziendali</div>' +
+    '<div class="sec">Company Details</div>' +
     '<p style="color:#64748B;font-size:13px;margin:0 0 14px;">' +
-      'Questi dati compaiono nell’intestazione di ogni preventivo stampato / PDF.' +
+      'These details appear in the header of each printed quote / PDF.' +
     '</p>' +
     '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;' +
          'padding:22px 28px;max-width:620px;margin-bottom:32px;">' +
 
       /* Riga 1: nome azienda (campo largo) */
       '<div style="margin-bottom:16px;">' +
-        '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Nome Azienda</label>' +
-        '<input id="pp-az-nome" type="text" style="width:100%;" placeholder="Es. Azienda S.r.l."' +
-        '  value="' + F.esc(valStr('azienda_nome', appCompany.name || 'Azienda S.r.l.')) + '">' +
+        '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Company Name</label>' +
+        '<input id="pp-az-nome" type="text" style="width:100%;" placeholder="Example: Greenfield Services LLC"' +
+        '  value="' + F.esc(sampleStr('azienda_nome', appCompany.name || 'Greenfield Services LLC')) + '">' +
       '</div>' +
 
       /* Riga 2: indirizzo + CAP affiancati */
       '<div style="display:grid;grid-template-columns:2fr 1fr;gap:14px;margin-bottom:16px;">' +
         '<div>' +
-          '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Indirizzo (via, città)</label>' +
-          '<input id="pp-az-indirizzo" type="text" style="width:100%;" placeholder="Es. Via Roma, 1 — 00100 Roma (RM)"' +
-          '  value="' + F.esc(valStr('azienda_indirizzo', appCompany.address)) + '">' +
+          '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Address (street, city)</label>' +
+          '<input id="pp-az-indirizzo" type="text" style="width:100%;" placeholder="Example: 123 Market St, Austin, TX"' +
+          '  value="' + F.esc(sampleStr('azienda_indirizzo', appCompany.address)) + '">' +
         '</div>' +
         '<div>' +
-          '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">CAP</label>' +
-          '<input id="pp-az-cap" type="text" style="width:100%;" placeholder="Es. 00100" maxlength="10"' +
-          '  value="' + F.esc(valStr('azienda_cap', appCompany.postal_code)) + '">' +
+          '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">ZIP code</label>' +
+          '<input id="pp-az-cap" type="text" style="width:100%;" placeholder="Example: 78701" maxlength="10"' +
+          '  value="' + F.esc(sampleStr('azienda_cap', appCompany.postal_code)) + '">' +
         '</div>' +
       '</div>' +
 
       /* Riga 3: telefono + email affiancati */
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px;">' +
         '<div>' +
-          '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Telefono</label>' +
-          '<input id="pp-az-tel" type="tel" style="width:100%;" placeholder="Es. 06 12345678"' +
-          '  value="' + F.esc(valStr('azienda_tel', appCompany.phone)) + '">' +
+          '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Phone</label>' +
+          '<input id="pp-az-tel" type="tel" style="width:100%;" placeholder="Example: (512) 555-0184"' +
+          '  value="' + F.esc(sampleStr('azienda_tel', appCompany.phone)) + '">' +
         '</div>' +
         '<div>' +
           '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Email</label>' +
-          '<input id="pp-az-email" type="email" style="width:100%;" placeholder="Es. info@azienda.it"' +
-          '  value="' + F.esc(valStr('azienda_email', appCompany.email)) + '">' +
+          '<input id="pp-az-email" type="email" style="width:100%;" placeholder="Example: billing@greenfield.com"' +
+          '  value="' + F.esc(sampleStr('azienda_email', appCompany.email)) + '">' +
         '</div>' +
       '</div>' +
 
-      /* Riga 4: partita IVA */
+      /* Row 4: Tax ID */
       '<div>' +
-        '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Partita IVA</label>' +
-        '<input id="pp-az-piva" type="text" style="width:200px;" placeholder="Es. 12345678901" maxlength="20"' +
-        '  value="' + F.esc(valStr('azienda_piva', appCompany.tax_id)) + '">' +
+        '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Tax ID</label>' +
+        '<input id="pp-company-tax-id" type="text" style="width:200px;" placeholder="Example: 12-3456789" maxlength="20"' +
+        '  value="' + F.esc(sampleStr('company_tax_id', appCompany.tax_id)) + '">' +
       '</div>' +
 
     '</div>' +
 
     /* =========================================================
-     * SEZIONE 1: Obiettivi Aziendali (overhead + profit)
+     * SECTION 1: Company targets (overhead + profit)
      * ========================================================= */
-    '<div class="sec">Obiettivi Aziendali</div>' +
+    '<div class="sec">Company Targets</div>' +
     '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;' +
          'padding:22px 28px;max-width:620px;margin-bottom:28px;">' +
 
       '<p style="color:#64748B;font-size:13px;margin:0 0 20px;">' +
-        'Imposta la tua stima dei costi generali e del profitto desiderato. ' +
-        'L’app calcola automaticamente il <b>markup minimo consigliato</b> che ' +
-        'ogni preventivo dovrebbe rispettare per coprire le spese e guadagnare.' +
+        'Set your estimated overheads and target profit. ' +
+        'The app automatically calculates the <b>recommended minimum markup</b> that ' +
+        'each quote should meet to cover expenses and profit.' +
       '</p>' +
 
       '<div style="display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-bottom:20px;">' +
@@ -140,8 +161,8 @@ Pages.politicaprezzi = async function () {
         /* Campo overhead% */
         '<div>' +
           '<label style="display:block;font-size:12px;font-weight:700;color:#374151;' +
-                  'margin-bottom:6px;">Costi generali stimati<br>' +
-            '<span style="font-weight:400;color:#64748B;">(% del fatturato annuo)</span></label>' +
+                  'margin-bottom:6px;">Estimated overheads<br>' +
+            '<span style="font-weight:400;color:#64748B;">(% of annual revenue)</span></label>' +
           '<div style="display:flex;align-items:center;gap:6px;">' +
             '<input id="pp-overhead" type="number" min="0" max="80" step="0.5"' +
             '  value="' + val('overhead_pct') + '"' +
@@ -153,8 +174,8 @@ Pages.politicaprezzi = async function () {
         /* Campo profit% */
         '<div>' +
           '<label style="display:block;font-size:12px;font-weight:700;color:#374151;' +
-                  'margin-bottom:6px;">Profitto desiderato<br>' +
-            '<span style="font-weight:400;color:#64748B;">(% sul fatturato)</span></label>' +
+                  'margin-bottom:6px;">Target profit<br>' +
+            '<span style="font-weight:400;color:#64748B;">(% of revenue)</span></label>' +
           '<div style="display:flex;align-items:center;gap:6px;">' +
             '<input id="pp-profit" type="number" min="0" max="60" step="0.5"' +
             '  value="' + val('profit_pct') + '"' +
@@ -170,7 +191,7 @@ Pages.politicaprezzi = async function () {
         'background:#D8F3DC;border:1.5px solid #52B788;border-radius:8px;' +
         'padding:12px 18px;display:flex;align-items:center;justify-content:space-between;">' +
         '<span style="font-size:13px;color:#1B4332;font-weight:600;">' +
-          '⚠️ Markup minimo consigliato (copre costi generali + profitto):' +
+          'Recommended minimum markup (covers overheads + profit):' +
         '</span>' +
         '<span id="pp-sugg-val" style="font-size:20px;font-weight:800;color:#1B4332;">' +
           F.pct(markupSugg) +
@@ -182,18 +203,18 @@ Pages.politicaprezzi = async function () {
     /* =========================================================
      * SEZIONE 2: Markup per categoria di costo
      * ========================================================= */
-    '<div class="sec">Markup per Categoria di Costo</div>' +
+    '<div class="sec">Markup by Cost Category</div>' +
     '<p style="color:#64748B;font-size:13px;margin:0 0 14px;">' +
-      'Imposta la percentuale da aggiungere ai costi diretti per ogni categoria. ' +
-      'Puoi sempre modificarla riga per riga al momento di generare il preventivo.' +
+      'Set the percentage to add to direct costs for each category. ' +
+      'You can still adjust it line by line when creating a quote.' +
     '</p>' +
     '<div class="tbl-wrap" style="max-width:620px;">' +
     '<table>' +
       '<thead><tr>' +
-        '<th>Categoria</th>' +
+        '<th>Category</th>' +
         '<th>Markup %</th>' +
-        '<th class="r">Margine equiv.</th>' +
-        '<th>Stato</th>' +
+        '<th class="r">Equivalent margin</th>' +
+        '<th>Status</th>' +
       '</tr></thead>' +
       '<tbody id="pp-cat-tbody">' + catRows + '</tbody>' +
     '</table>' +
@@ -202,7 +223,7 @@ Pages.politicaprezzi = async function () {
     /* Pulsante applica suggeriti */
     '<button class="btn-add" style="margin-top:10px;"' +
     '  onclick="Pages._ppApplySuggested()">' +
-    '  ↺ Applica markup consigliato a tutte le categorie' +
+    '  Apply recommended markup to all categories' +
     '</button>' +
 
     /* Pulsante salva unico per tutte le sezioni */
@@ -213,7 +234,7 @@ Pages.politicaprezzi = async function () {
         'font-family:var(--font);transition:background .2s;"' +
         'onmouseover="this.style.background=\'#2D6A4F\'"' +
         'onmouseout="this.style.background=\'#1B4332\'">' +
-        '💾 Salva Impostazioni Preventivi' +
+        'Save Pricing Settings' +
       '</button>' +
       '<span id="pp-save-msg" style="margin-left:16px;font-size:13px;color:#2E7D32;' +
             'display:none;font-weight:600;"></span>' +
@@ -222,7 +243,7 @@ Pages.politicaprezzi = async function () {
 
 
 /* ------------------------------------------------------------
- * Ricalcola il box "Markup minimo consigliato" live
+ * Recalculates the recommended minimum markup box live.
  * ------------------------------------------------------------ */
 Pages._ppUpdateSuggested = function () {
   const overhead = +document.getElementById('pp-overhead').value || 0;
@@ -296,7 +317,7 @@ Pages._ppSave = async function () {
     azienda_cap:       gv('pp-az-cap'),
     azienda_tel:       gv('pp-az-tel'),
     azienda_email:     gv('pp-az-email'),
-    azienda_piva:      gv('pp-az-piva'),
+    company_tax_id:    gv('pp-company-tax-id'),
 
     /* Obiettivi aziendali */
     overhead_pct: +document.getElementById('pp-overhead').value || 0,
@@ -331,7 +352,7 @@ Pages._ppSave = async function () {
     }
   } catch (err) {
     /* Mostra l'errore reale per il debug */
-    alert('Errore salvataggio: ' + (err.message || JSON.stringify(err)));
+    alert('Save error: ' + (err.message || JSON.stringify(err)));
     return;
   }
 
@@ -344,13 +365,13 @@ Pages._ppSave = async function () {
       postal_code: data.azienda_cap,
       phone: data.azienda_tel,
       email: data.azienda_email,
-      tax_id: data.azienda_piva,
+      tax_id: data.company_tax_id,
     },
   });
 
   /* Feedback visivo */
   const msg = document.getElementById('pp-save-msg');
-  msg.textContent = '✓ Salvato!';
+  msg.textContent = 'Saved';
   msg.style.display = 'inline';
   setTimeout(function () { msg.style.display = 'none'; }, 3000);
 };
@@ -389,13 +410,13 @@ Pages._markupBadge = function (markup, margineTarget) {
   let color, label;
 
   if (sugg <= 0) {
-    color = '#64748B'; label = '— nessun obiettivo';
+    color = '#64748B'; label = 'No target';
   } else if (markup >= sugg) {
-    color = '#2E7D32'; label = '✔ Sopra obiettivo';
+    color = '#2E7D32'; label = 'Above target';
   } else if (markup >= sugg * 0.8) {
-    color = '#F9A825'; label = '⚠ Vicino al limite';
+    color = '#F9A825'; label = 'Near target';
   } else {
-    color = '#C62828'; label = '✖ Sotto obiettivo';
+    color = '#C62828'; label = 'Below target';
   }
 
   return '<span style="display:inline-block;padding:3px 10px;border-radius:20px;' +

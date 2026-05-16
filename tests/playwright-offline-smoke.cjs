@@ -8,13 +8,23 @@ function loadPlaywright() {
     return require('playwright');
   } catch (err) {
     const modulesDir = process.env.WORKSPACE_NODE_MODULES;
-    if (!modulesDir) throw err;
-    return require(path.join(modulesDir, 'playwright'));
+    if (!modulesDir) {
+      console.log('SKIP playwright-offline-smoke: Playwright is not installed.');
+      return null;
+    }
+    try {
+      return require(path.join(modulesDir, 'playwright'));
+    } catch (bundledErr) {
+      console.log('SKIP playwright-offline-smoke: Playwright is not fully installed.');
+      return null;
+    }
   }
 }
 
 async function main() {
-  const { chromium } = loadPlaywright();
+  const playwright = loadPlaywright();
+  if (!playwright) return;
+  const { chromium } = playwright;
   const appPath = path.resolve(__dirname, '..', 'index.html');
   const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || [
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -54,7 +64,8 @@ async function main() {
     title: document.title,
     xlsxLoaded: typeof XLSX !== 'undefined',
     activeDashboard: Boolean(document.querySelector('#page-dashboard.active')),
-    loginHidden: getComputedStyle(document.getElementById('login-overlay')).display === 'none',
+    loginRemoved: !document.getElementById('login-overlay') && !document.getElementById('reset-overlay'),
+    onboardingRemoved: !document.getElementById('onboarding-overlay'),
     httpScripts: Array.from(document.scripts)
       .map(script => script.src)
       .filter(src => /^https?:\/\//i.test(src)),
@@ -72,7 +83,7 @@ async function main() {
       { codice: 'PRJ-X', nome: '=Formula Project', cliente: 'Client A', stato: 'In corso' },
     ]);
     await DB.insertBatch('budget_ricavi', [
-      { codice: 'PRJ-X', tipo_ricavo: 'Fee', descrizione: 'Project fee', importo: 1000, aliq_iva: 22 },
+      { codice: 'PRJ-X', tipo_ricavo: 'Fee', descrizione: 'Project fee', importo: 1000 },
     ]);
 
     let capturedExport = null;
@@ -89,7 +100,7 @@ async function main() {
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
-      { codice: 'PRJ-IMPORT', nome: 'Imported Project', cliente: 'Client B', stato: 'Pianificato' },
+      { codice: 'PRJ-IMPORT', nome: 'Imported Project', cliente: 'Client B', stato: 'Planned' },
     ]), 'Projects');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
       { Metric: 'Ignored', Value: 1 },
@@ -106,6 +117,7 @@ async function main() {
       exportSheets: capturedExport.sheets,
       exportFilename: capturedExport.filename,
       formulaEscaped: capturedExport.projectNameCell === "'=Formula Project",
+      noQuoteTaxSummary: !capturedExport.sheets.includes('Quote Tax Summary'),
       importedProjectCodes: importedProjects.map(row => row.codice),
       backupHasSettings: Boolean(backup.settings && backup.settings.currency),
       backupHasTables: Boolean(backup.tables && Array.isArray(backup.tables.anagrafica)),
@@ -116,7 +128,8 @@ async function main() {
 
   if (!result.xlsxLoaded) throw new Error('XLSX global is missing.');
   if (!result.activeDashboard) throw new Error('Dashboard is not active after offline startup.');
-  if (!result.loginHidden) throw new Error('Offline login overlay was not dismissed.');
+  if (!result.loginRemoved) throw new Error('Login/reset overlays are still present.');
+  if (!result.onboardingRemoved) throw new Error('Onboarding overlay is still present.');
   if (result.httpScripts.length) throw new Error('HTTP/HTTPS scripts found: ' + result.httpScripts.join(', '));
   if (httpRequests.length) throw new Error('HTTP/HTTPS runtime requests found: ' + httpRequests.join(', '));
   if (pageErrors.length) throw new Error('Page errors: ' + pageErrors.join(' | '));
@@ -124,6 +137,7 @@ async function main() {
   if (!result.cspPresent) throw new Error('CSP meta tag is missing.');
   if (!workflow.exportSheets.includes('Dashboard Summary')) throw new Error('Excel summary sheet missing.');
   if (!workflow.exportSheets.includes('Projects')) throw new Error('Excel projects sheet missing.');
+  if (!workflow.noQuoteTaxSummary) throw new Error('Excel export still includes Quote Tax Summary.');
   if (!workflow.formulaEscaped) throw new Error('Formula-like Excel string was not escaped.');
   if (!workflow.importedProjectCodes.includes('PRJ-IMPORT')) throw new Error('Excel import did not load operational sheet.');
   if (!workflow.backupHasSettings || !workflow.backupHasTables) throw new Error('JSON backup payload incomplete.');
