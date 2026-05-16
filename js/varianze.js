@@ -18,7 +18,7 @@ Pages.varianze = async function() {
     const e = await totali('consuntivo', p.codice);
     rp+=b.ricavi; rc+=e.ricavi;
     cp+=b.costi;  cc+=e.costi;
-    iNp+=b.ivanetta; iNc+=e.ivanetta;
+    iNp+=b.taxNet; iNc+=e.taxNet;
 
     return '<tr>' +
       '<td><b>' + F.esc(p.codice) + '</b></td>' +
@@ -37,9 +37,9 @@ Pages.varianze = async function() {
       '<td class="r">' + F.money(b.margine) + '</td>' +
       '<td class="r">' + F.money(e.margine) + '</td>' +
       '<td class="r ' + F.cls(e.margine - b.margine) + '">' + F.money(e.margine - b.margine) + '</td>' +
-      /* Imposta netta */
-      '<td class="r iva">' + F.money(b.ivanetta) + '</td>' +
-      '<td class="r iva">' + F.money(e.ivanetta) + '</td>' +
+      /* Net tax */
+      '<td class="r tax">' + F.money(b.taxNet) + '</td>' +
+      '<td class="r tax">' + F.money(e.taxNet) + '</td>' +
     '</tr>';
   }));
 
@@ -58,7 +58,7 @@ Pages.varianze = async function() {
         '<th class="r">\u0394 Revenue</th><th class="r">\u0394%</th>' +
         '<th class="r">Planned Margin</th><th class="r">Actual Margin</th>' +
         '<th class="r">\u0394 Margin</th>' +
-        '<th class="r iva">' + F.esc(F.taxLabel()) + ' Net B.</th><th class="r iva">' + F.esc(F.taxLabel()) + ' Net A.</th>' +
+        '<th class="r tax">' + F.esc(F.taxLabel()) + ' Net B.</th><th class="r tax">' + F.esc(F.taxLabel()) + ' Net A.</th>' +
       '</tr></thead>' +
 
       '<tbody>' + rows.join('') + '</tbody>' +

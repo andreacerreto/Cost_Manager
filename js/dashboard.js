@@ -1,4 +1,4 @@
-﻿'use strict';
+'use strict';
 
 /* ============================================================
  * DASHBOARD.JS — Renderer della pagina Dashboard.
@@ -79,9 +79,9 @@ Pages.dashboard = async function () {
 
     /* Accumula i totali globali per le KPI card */
     rp+=b.ricavi; rc+=e.ricavi; cp+=b.costi; cc+=e.costi;
-    iNp+=b.ivanetta; iNc+=e.ivanetta;
-    iRp+=b.ivaricavi; iRc+=e.ivaricavi;
-    iCp+=b.ivacosti;  iCc+=e.ivacosti;
+    iNp+=b.taxNet; iNc+=e.taxNet;
+    iRp+=b.taxRevenue; iRc+=e.taxRevenue;
+    iCp+=b.taxCosts;  iCc+=e.taxCosts;
 
     /* Calcola percentuale margine per la barra progresso */
     const pctM = e.ricavi ? e.margine / e.ricavi * 100 : NaN;
@@ -89,10 +89,10 @@ Pages.dashboard = async function () {
 
     /* Mappa stato → classe CSS badge */
     const badge = {
-      'Completato':  'badge-completato',
-      'In corso':    'badge-in-corso',
-      'Pianificato': 'badge-pianificato',
-      'Sospeso':     'badge-sospeso',
+      'Completed':   'badge-completato',
+      'In progress': 'badge-in-corso',
+      'Planned':     'badge-pianificato',
+      'On hold':     'badge-sospeso',
     }[p.stato] || 'badge-pianificato';
 
     /* Riga HTML con data-stato per il filtro client-side */
@@ -131,7 +131,7 @@ Pages.dashboard = async function () {
   const iEuro  = '<line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>';
   const iCosto = '<path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/>';
   const iTrend = '<polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>';
-  const iIva   = '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>';
+  const iTax   = '<rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/>';
 
   /* Helper: KPI card con icon-box */
   function kcard(cls, bg, ico, label, val, delta) {
@@ -142,7 +142,7 @@ Pages.dashboard = async function () {
   }
 
   /* Alert imposta dinamico */
-  const ivaAlert = iNc > 0
+  const taxAlert = iNc > 0
     ? '<div class="alert warn">' + F.esc(F.taxLabel()) + ' payable estimate <b>' + F.money(iNc) + '</b>.</div>'
     : iNc < 0
     ? '<div class="alert success">' + F.esc(F.taxLabel()) + ' credit estimate <b>' + F.money(Math.abs(iNc)) + '</b></div>'
@@ -152,19 +152,19 @@ Pages.dashboard = async function () {
    * STEP 3 — Costruzione HTML
    * ---------------------------------------------------------- */
   let h = '<h1>Dashboard</h1>';
-  h += '<p class="subtitle">Aggiornamento in tempo reale \u00b7 ' +
-    projs.length + ' progett' + (projs.length === 1 ? 'o' : 'i') + ' totali</p>';
+  h += '<p class="subtitle">Real-time overview · ' +
+    projs.length + ' project' + (projs.length === 1 ? '' : 's') + ' total</p>';
 
-  h += '<div class="sec">KPI Economici</div><div class="kpi-grid">';
-  h += kcard('',                               '#F9A825',                      iEuro,  'Ricavi Totali',   F.money(rc), '\u25b2 Prev. ' + F.money(rp));
-  h += kcard('c-red',                          '#EF5350',                      iCosto, 'Costi Totali',    F.money(cc), '\u25b2 Prev. ' + F.money(cp));
-  h += kcard(mc < 0 ? 'c-red' : 'c-margin',   mc < 0 ? '#EF5350' : '#1B4332', iTrend, 'Margine Lordo',  F.money(mc), (mc >= 0 ? '\u25b2' : '\u25bc') + ' Prev. ' + F.money(mp));
-  h += kcard('c-grey',                         '#37474F',                      iIva,   F.taxLabel() + ' Net', F.money(iNc), (iNc >= 0 ? '\u25b2' : '\u25bc') + ' Prev. ' + F.money(iNp));
-  h += kcard('c-blue',                         '#1565C0',                      iEuro,  'Margine Eff. %',  F.pct(rc ? mc / rc * 100 : NaN), 'Prev. ' + F.pct(rp ? mp / rp * 100 : NaN));
-  h += kcard('c-grey',                         '#546E7A',                      iCosto, 'CG Prev. / Eff.', F.money(cgC), 'Prev. ' + F.money(cgB));
+  h += '<div class="sec">Economic KPIs</div><div class="kpi-grid">';
+  h += kcard('',                               '#F9A825',                      iEuro,  'Total Revenue',   F.money(rc), '\u25b2 Planned ' + F.money(rp));
+  h += kcard('c-red',                          '#EF5350',                      iCosto, 'Total Costs',     F.money(cc), '\u25b2 Planned ' + F.money(cp));
+  h += kcard(mc < 0 ? 'c-red' : 'c-margin',   mc < 0 ? '#EF5350' : '#1B4332', iTrend, 'Gross Margin',   F.money(mc), (mc >= 0 ? '\u25b2' : '\u25bc') + ' Planned ' + F.money(mp));
+  h += kcard('c-grey',                         '#37474F',                      iTax,   F.taxLabel() + ' Net', F.money(iNc), (iNc >= 0 ? '\u25b2' : '\u25bc') + ' Planned ' + F.money(iNp));
+  h += kcard('c-blue',                         '#1565C0',                      iEuro,  'Actual Margin %', F.pct(rc ? mc / rc * 100 : NaN), 'Planned ' + F.pct(rp ? mp / rp * 100 : NaN));
+  h += kcard('c-grey',                         '#546E7A',                      iCosto, 'Overheads Planned / Actual', F.money(cgC), 'Planned ' + F.money(cgB));
   h += '</div>';
 
-  h += '<div class="iva-hdr">' + F.esc(F.taxLabel()) + ' \u2014 Company Summary</div><div class="kpi-grid">';
+  h += '<div class="tax-hdr">' + F.esc(F.taxLabel()) + ' \u2014 Company Summary</div><div class="kpi-grid">';
   h += F.kpi(F.taxLabel() + ' Revenue Budget', F.money(iRp), '', 'c-grey');
   h += F.kpi(F.taxLabel() + ' Revenue Actual', F.money(iRc), '', 'c-grey');
   h += F.kpi(F.taxLabel() + ' Costs Budget',  F.money(iCp), '', 'c-grey');
@@ -173,30 +173,30 @@ Pages.dashboard = async function () {
   h += F.kpi(F.taxLabel() + ' Net Actual',   F.money(iNc), '', iNc > 500 ? 'c-red' : 'c-grey');
   h += '</div>';
 
-  h += ivaAlert;
+  h += taxAlert;
 
   /* ----------------------------------------------------------
    * Sezione tabella con filtri per stato.
    * ---------------------------------------------------------- */
-  h += '<div class="sec">Stato Avanzamento Progetti</div>';
+  h += '<div class="sec">Project Status</div>';
 
   if (projRows.length) {
     /* Calcola contatori per i pill filtro */
     const contatori = { '': projs.length };
-    ['Pianificato', 'In corso', 'Completato', 'Sospeso'].forEach(function (s) {
+    C.STATI.forEach(function (s) {
       contatori[s] = projs.filter(function (p) { return p.stato === s; }).length;
     });
 
     h += '<div class="dash-filtri" id="dash-filtri-bar">';
-    h += _dashPill('', 'Tutti', contatori[''], Pages._dashboardFiltroStato);
-    ['Pianificato', 'In corso', 'Completato', 'Sospeso'].forEach(function (s) {
+    h += _dashPill('', 'All', contatori[''], Pages._dashboardFiltroStato);
+    C.STATI.forEach(function (s) {
       if (contatori[s] > 0) h += _dashPill(s, s, contatori[s], Pages._dashboardFiltroStato);
     });
     h += '</div>';
 
     h += '<div id="dash-tbl-wrap" class="tbl-wrap"><table id="dash-tabella-progetti">' +
-      '<thead><tr><th>Codice</th><th>Nome Progetto</th><th>Cliente</th>' +
-      '<th>Stato</th><th class="r">Margine Eff.</th><th>Margine %</th></tr></thead>' +
+      '<thead><tr><th>Code</th><th>Project Name</th><th>Customer</th>' +
+      '<th>Status</th><th class="r">Actual Margin</th><th>Margin %</th></tr></thead>' +
       '<tbody>' + projRows.join('') + '</tbody></table></div>';
 
     h += '<div id="dash-count-label" class="dash-count-lbl"></div>';
@@ -259,7 +259,7 @@ function dashFiltroApplica(stato) {
   const lbl = document.getElementById('dash-count-label');
   if (lbl) {
     lbl.textContent = stato === ''
-      ? visibili + ' progett' + (visibili === 1 ? 'o' : 'i') + ' totali'
-      : visibili + ' progett' + (visibili === 1 ? 'o' : 'i') + ' con stato "' + stato + '"';
+      ? visibili + ' project' + (visibili === 1 ? '' : 's') + ' total'
+      : visibili + ' project' + (visibili === 1 ? '' : 's') + ' with status "' + stato + '"';
   }
 }

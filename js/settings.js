@@ -5,33 +5,41 @@
  * ============================================================ */
 
 const SETTINGS_STORAGE_KEY = 'project_cost_manager_settings_v1';
-const SETTINGS_ALLOWED_LANGUAGES = ['en', 'it'];
-const SETTINGS_ALLOWED_CURRENCIES = ['EUR', 'USD', 'GBP'];
-const SETTINGS_ALLOWED_LOCALES = ['en-US', 'en-GB', 'it-IT'];
+const SETTINGS_ALLOWED_LANGUAGES = ['en'];
+const SETTINGS_ALLOWED_CURRENCIES = ['USD'];
+const SETTINGS_ALLOWED_LOCALES = ['en-US'];
+const SETTINGS_ALLOWED_COUNTRY_PROFILES = ['US'];
 const SETTINGS_ALLOWED_THEMES = ['light', 'dark'];
 const SETTINGS_TEXT_MAX = 500;
 const SETTINGS_TAX_RATE_PRESETS = {
   en: {
     locale: 'en-US',
-    tax_label: 'Sales tax',
+    tax_label: 'Sales Tax',
     tax_id_label: 'EIN / Tax ID',
     rates: [0, 4, 5, 6, 7, 8.25, 10],
   },
-  it: {
-    locale: 'it-IT',
-    tax_label: 'IVA',
-    tax_id_label: 'P.IVA',
-    rates: [0, 4, 10, 22],
+};
+const SETTINGS_COUNTRY_PROFILE_PRESETS = {
+  US: {
+    language: 'en',
+    currency: 'USD',
+    locale: 'en-US',
+    tax_label: 'Sales Tax',
+    tax_id_label: 'EIN / Tax ID',
+    rates: SETTINGS_TAX_RATE_PRESETS.en.rates,
   },
 };
+const SETTINGS_US_TAX_DISCLAIMER = 'Project Cost Manager helps estimate and document Sales Tax using rates you enter manually. It is not legal, tax, or accounting advice; verify rates, taxability, exemptions, and nexus obligations with your accountant or tax advisor.';
 
 const DEFAULT_SETTINGS = {
+  country_profile: 'US',
   language: 'en',
   currency: 'USD',
   locale: SETTINGS_TAX_RATE_PRESETS.en.locale,
   tax_label: SETTINGS_TAX_RATE_PRESETS.en.tax_label,
   tax_id_label: SETTINGS_TAX_RATE_PRESETS.en.tax_id_label,
   tax_rates: SETTINGS_TAX_RATE_PRESETS.en.rates.slice(),
+  tax_disclaimer: SETTINGS_US_TAX_DISCLAIMER,
   theme: 'light',
   first_run_done: false,
   last_backup_at: '',
@@ -64,13 +72,14 @@ const I18N = {
     'session.label': 'Mode',
     'offline.user': 'Offline local',
     'settings.title': 'Settings',
-    'settings.subtitle': 'Configure language, currency, tax labels and company details used in quotes and exports.',
+    'settings.subtitle': 'Configure US currency, Sales Tax labels, rates, and company details used in quotes and exports.',
+    'settings.countryProfile': 'Country / tax profile',
     'settings.language': 'Language',
     'settings.currency': 'Currency',
     'settings.locale': 'Number format',
     'settings.taxLabel': 'Tax label',
     'settings.taxIdLabel': 'Company tax ID label',
-    'settings.taxRates': 'Sales tax rates (%)',
+    'settings.taxRates': 'Sales Tax rates (%)',
     'settings.company': 'Company details',
     'settings.companyName': 'Company name',
     'settings.address': 'Address',
@@ -78,6 +87,7 @@ const I18N = {
     'settings.phone': 'Phone',
     'settings.email': 'Email',
     'settings.taxId': 'EIN / Tax ID',
+    'settings.taxDisclaimer': 'Sales Tax is manual. Set your applicable rate and verify taxability, exemptions and nexus obligations with your accountant.',
     'settings.save': 'Save settings',
     'settings.saved': 'Settings saved',
     'settings.demo': 'Load demo data',
@@ -100,252 +110,10 @@ const I18N = {
     'common.cancel': 'Cancel',
     'common.save': 'Save',
   },
-  it: {
-    'app.subtitle': 'Controllo commesse offline',
-    'nav.dashboard': 'Dashboard',
-    'nav.projects': 'Progetti',
-    'nav.budget': 'Budget',
-    'nav.actuals': 'Consuntivo',
-    'nav.variance': 'Varianze',
-    'nav.overheads': 'Costi generali',
-    'nav.analytics': 'Analytics',
-    'nav.quotes': 'Preventivi',
-    'nav.pricing': 'Impostazioni preventivi',
-    'nav.exportExcel': 'Esporta Excel',
-    'nav.importExcel': 'Importa Excel',
-    'nav.backup': 'Backup JSON',
-    'nav.settings': 'Impostazioni',
-    'session.label': 'Modalita',
-    'offline.user': 'Offline locale',
-    'settings.title': 'Impostazioni',
-    'settings.subtitle': 'Configura lingua, valuta, fiscalita e dati aziendali usati in preventivi ed export.',
-    'settings.language': 'Lingua',
-    'settings.currency': 'Valuta',
-    'settings.locale': 'Formato numeri',
-    'settings.taxLabel': 'Etichetta imposta',
-    'settings.taxIdLabel': 'Etichetta codice fiscale azienda',
-    'settings.taxRates': 'Aliquote IVA (%)',
-    'settings.company': 'Dati aziendali',
-    'settings.companyName': 'Nome azienda',
-    'settings.address': 'Indirizzo',
-    'settings.postalCode': 'CAP',
-    'settings.phone': 'Telefono',
-    'settings.email': 'Email',
-    'settings.taxId': 'Partita IVA / Tax ID',
-    'settings.save': 'Salva impostazioni',
-    'settings.saved': 'Impostazioni salvate',
-    'settings.demo': 'Carica dati demo',
-    'settings.demoHint': 'Sostituisce i dati attuali con un esempio per imprese a progetto.',
-    'theme.label': 'Modalita scura',
-    'theme.light': 'Modalita chiara',
-    'theme.dark': 'Modalita scura',
-    'backup.title': 'Backup e ripristino',
-    'backup.subtitle': 'Usa Excel per i consulenti. Usa JSON per backup e ripristino completo.',
-    'backup.excelTitle': 'Condivisione Excel',
-    'backup.excelText': 'Crea un file .xlsx con fogli operativi, analisi varianze e impostazioni.',
-    'backup.jsonTitle': 'Backup completo JSON',
-    'backup.jsonText': 'Salva e ripristina tutti i dati locali, incluse le impostazioni.',
-    'backup.last': 'Ultimo backup',
-    'backup.never': 'Mai',
-    'backup.exportJson': 'Backup JSON',
-    'backup.restoreJson': 'Ripristina backup',
-    'backup.exportExcel': 'Esporta Excel',
-    'backup.importExcel': 'Importa Excel',
-    'common.cancel': 'Annulla',
-    'common.save': 'Salva',
-  },
 };
 
-const DOM_TRANSLATIONS_EN = {
-  'Anagrafica Progetti': 'Projects',
-  'Budget Preventivo': 'Budget',
-  'Consuntivo': 'Actuals',
-  'Consuntivo Effettivo': 'Actuals',
-  'Analisi Varianze': 'Variance Analysis',
-  'Costi Generali Aziendali': 'Company Overheads',
-  'Costi Generali': 'Overheads',
-  'Preventivi Cliente': 'Client Quotes',
-  'Preventivi Esistenti': 'Existing Quotes',
-  'Impostazioni Preventivi': 'Pricing Settings',
-  'Dati Aziendali': 'Company Details',
-  'Obiettivi Aziendali': 'Company Targets',
-  'Nome Azienda': 'Company Name',
-  'Partita IVA': 'Tax ID',
-  'Progetto': 'Project',
-  'Cliente': 'Client',
-  'Codice Progetto': 'Project Code',
-  'Cod. Progetto': 'Project Code',
-  'Nome Progetto': 'Project Name',
-  'Data Inizio': 'Start Date',
-  'Data Fine Prev.': 'Planned End',
-  'Responsabile': 'Owner',
-  'Tipologia': 'Type',
-  'Stato': 'Status',
-  'Note': 'Notes',
-  'Ricavi Totali': 'Total Revenue',
-  'Costi Totali': 'Total Costs',
-  'Margine Lordo': 'Gross Margin',
-  'Costi Fissi Totali': 'Total Fixed Costs',
-  'Ricavi reali': 'Actual Revenue',
-  'Costi Variabili': 'Variable Costs',
-  'Totale Costi': 'Total Costs',
-  'Totale Ricavi': 'Total Revenue',
-  'Costo Interno': 'Internal Cost',
-  'Totale Imponibile': 'Subtotal',
-  'Totale complessivo': 'Total',
-  'Budget': 'Budget',
-  'Varianza': 'Variance',
-  'COSTI': 'COSTS',
-  'RICAVI': 'REVENUE',
-  'Riepilogo Progetto': 'Project Summary',
-  'Categoria': 'Category',
-  'Descrizione': 'Description',
-  'Costo Tot.': 'Total Cost',
-  'Tipo Ricavo': 'Revenue Type',
-  'Voce di Costo': 'Cost Item',
-  'TOT ANNO': 'YEAR TOTAL',
-  'TOTALI': 'TOTALS',
-  'Nuova voce': 'New item',
-  'Nuovo Progetto': 'New Project',
-  'Aggiungi riga costo': 'Add cost row',
-  'Aggiungi riga ricavo': 'Add revenue row',
-  'Genera Nuovo Preventivo': 'Create New Quote',
-  'N. Preventivo': 'Quote No.',
-  'Data': 'Date',
-  'Azioni': 'Actions',
-  'Apri': 'Open',
-  'PDF': 'PDF',
-  'Elimina': 'Delete',
-  'Salva Preventivo': 'Save Quote',
-  'Anteprima PDF': 'PDF Preview',
-  'Stampa / Salva PDF': 'Print / Save PDF',
-  'Chiudi': 'Close',
-  'Tutti': 'All',
-  'Pianificato': 'Planned',
-  'In corso': 'In progress',
-  'Completato': 'Completed',
-  'Sospeso': 'Paused',
-  'Bozza': 'Draft',
-  'Inviato': 'Sent',
-  'Accettato': 'Accepted',
-  'Rifiutato': 'Rejected',
-  'Aggiornamento in tempo reale': 'Live update',
-  'KPI Economici': 'Financial KPIs',
-  'Sales tax — Company Summary': 'Sales tax - Company Summary',
-  'Stato Avanzamento Progetti': 'Project Progress Status',
-  'Codice': 'Code',
-  'MARGINE EFF.': 'ACTUAL MARGIN',
-  'MARGINE EFF. %': 'ACTUAL MARGIN %',
-  'Margine Eff.': 'Actual Margin',
-  'Margine Eff. %': 'Actual Margin %',
-  'Margine %': 'Margin %',
-  'CG PREV. / EFF.': 'OVERHEADS PLAN / ACTUAL',
-  'CG Prev. / Eff.': 'Overheads Plan / Actual',
-  'Il': 'The',
-  '(es. PRJ-001) è la chiave univoca di tutto il sistema.': '(for example PRJ-001) is the unique key across the app.',
-  'Il Codice Progetto (es. PRJ-001) è la chiave univoca di tutto il sistema.': 'The Project Code (for example PRJ-001) is the unique key across the app.',
-  '+ Nuovo Progetto': 'New Project',
-  '+ Aggiungi riga costo': 'Add cost row',
-  '+ Aggiungi riga ricavo': 'Add revenue row',
-  '+ Nuova voce': 'New item',
-  'Q.TÀ': 'QTY',
-  'Q.tà': 'Qty',
-  'U.M.': 'Unit',
-  'COSTO UNIT. PREV.': 'PLANNED UNIT COST',
-  'COSTO UNIT. EFF.': 'ACTUAL UNIT COST',
-  'IMPORTO PREV.': 'PLANNED AMOUNT',
-  'IMPORTO EFF.': 'ACTUAL AMOUNT',
-  'Costo Unit. Prev.': 'Planned Unit Cost',
-  'Costo Unit. Eff.': 'Actual Unit Cost',
-  'Importo Prev.': 'Planned Amount',
-  'Importo Eff.': 'Actual Amount',
-  'TOTALE COSTI': 'TOTAL COSTS',
-  'TOTALE RICAVI': 'TOTAL REVENUE',
-  'TOT IVA': 'TOTAL VAT',
-  'Margine Eff.': 'Actual Margin',
-  'Costi fissi indipendenti dai progetti: struttura, personale, utenze.': 'Fixed overhead costs independent from projects: structure, staff, utilities.',
-  'Budget Preventivo': 'Budget',
-  'Gen': 'Jan',
-  'Mag': 'May',
-  'Giu': 'Jun',
-  'Lug': 'Jul',
-  'Ago': 'Aug',
-  'Set': 'Sep',
-  'Ott': 'Oct',
-  'Dic': 'Dec',
-  'GEN': 'JAN',
-  'MAG': 'MAY',
-  'GIU': 'JUN',
-  'LUG': 'JUL',
-  'AGO': 'AUG',
-  'SET': 'SEP',
-  'OTT': 'OCT',
-  'DIC': 'DEC',
-  'Manodopera': 'Labor',
-  'Materiali': 'Materials',
-  'Mezzi': 'Equipment',
-  'Subappalti': 'Subcontracts',
-  'Trasporti': 'Transport',
-  'Altro': 'Other',
-  'Progettazione': 'Design',
-  'Manutenzione ordinaria': 'Routine maintenance',
-  'Manutenzione straordinaria': 'Extraordinary maintenance',
-  'Ristrutturazione area': 'Area renovation',
-  'Intervento tecnico': 'Technical work',
-  'Impianto': 'System',
-  'Allestimento': 'Fit-out',
-  'Pulizia area': 'Area cleaning',
-  'Analisi avanzata: incidenza dei costi generali sui progetti.': 'Advanced analysis: overhead impact on projects.',
-  '🥧 Incidenza Costi Generali': 'Overhead Impact',
-  'Voce di costo generale:': 'Overhead cost item:',
-  'TOTALE VOCE/ANNO': 'TOTAL ITEM/YEAR',
-  '% SU CG AZIENDALI': '% OF COMPANY OVERHEADS',
-  '% SU TUTTI I COSTI': '% OF ALL COSTS',
-  'MEDIA MENSILE': 'MONTHLY AVERAGE',
-  'Totale voce/anno': 'Total item/year',
-  '% su CG aziendali': '% of company overheads',
-  '% su tutti i costi': '% of all costs',
-  'Media mensile': 'Monthly average',
-  'Progetto per nuovo preventivo': 'Project for new quote',
-  'Nessun preventivo ancora generato.': 'No quotes generated yet.',
-  'Questi dati compaiono nell’intestazione di ogni preventivo stampato / PDF.': 'These details appear in the header of each printed quote / PDF.',
-  'Indirizzo (via, città)': 'Address (street, city)',
-  'CAP': 'Postal code',
-  'Telefono': 'Phone',
-  'Imposta la tua stima dei costi generali e del profitto desiderato. L’app calcola automaticamente il markup minimo consigliato che ogni preventivo dovrebbe rispettare per coprire le spese e guadagnare.': 'Set your estimated overheads and target profit. The app automatically calculates the recommended minimum markup each quote should meet to cover expenses and profit.',
-  'Imposta la tua stima dei costi generali e del profitto desiderato. L’app calcola automaticamente il': 'Set your estimated overheads and target profit. The app automatically calculates the',
-  'markup minimo consigliato': 'recommended minimum markup',
-  'che ogni preventivo dovrebbe rispettare per coprire le spese e guadagnare.': 'that each quote should meet to cover expenses and profit.',
-  'Costi generali stimati': 'Estimated overheads',
-  '(% del fatturato annuo)': '(% of annual revenue)',
-  'Profitto desiderato': 'Target profit',
-  '(% sul fatturato)': '(% of revenue)',
-  '⚠️ Markup minimo consigliato (copre costi generali + profitto):': 'Recommended minimum markup (covers overheads + profit):',
-  'Markup per Categoria di Costo': 'Markup by Cost Category',
-  'Imposta la percentuale da aggiungere ai costi diretti per ogni categoria. Puoi sempre modificarla riga per riga al momento di generare il preventivo.': 'Set the percentage to add to direct costs for each category. You can still adjust it line by line when generating a quote.',
-  'MARGINE EQUIV.': 'EQUIV. MARGIN',
-  'Margine equiv.': 'Equiv. margin',
-  '✖ Sotto obiettivo': 'Below target',
-  '↺ Applica markup consigliato a tutte le categorie': 'Apply recommended markup to all categories',
-  '💾 Salva Impostazioni Preventivi': 'Save Pricing Settings',
-};
-
-const DOM_REPLACEMENTS_EN = [
-  [/Aggiornamento in tempo reale/g, 'Live update'],
-  [/(\d+)\s+progetto totali/g, '$1 total project'],
-  [/(\d+)\s+progetti totali/g, '$1 total projects'],
-  [/In corso/g, 'In progress'],
-  [/Pianificato/g, 'Planned'],
-  [/Completato/g, 'Completed'],
-  [/Sospeso/g, 'Paused'],
-  [/Bozza/g, 'Draft'],
-  [/Inviato/g, 'Sent'],
-  [/Accettato/g, 'Accepted'],
-  [/Rifiutato/g, 'Rejected'],
-  [/Distribuzione mensile/g, 'Monthly distribution'],
-  [/\+ Genera Nuovo Preventivo per/g, 'Create New Quote for'],
-  [/Imposta la tua stima dei costi generali e del profitto desiderato\. L.app calcola automaticamente il markup minimo consigliato che ogni preventivo dovrebbe rispettare per coprire le spese e guadagnare\./g, 'Set your estimated overheads and target profit. The app automatically calculates the recommended minimum markup each quote should meet to cover expenses and profit.'],
-];
+const DOM_TRANSLATIONS_EN = {};
+const DOM_REPLACEMENTS_EN = [];
 
 function _settingsClone(obj) {
   return JSON.parse(JSON.stringify(obj));
@@ -373,7 +141,7 @@ function _settingsCleanRates(value) {
     : String(value ?? '').split(',');
   const rates = source
     .map(v => Number(String(v).trim().replace(',', '.')))
-    .filter(v => Number.isFinite(v) && v >= 0 && v <= 100);
+    .filter(v => Number.isFinite(v) && v >= 0 && v <= 15);
   return [...new Set(rates)].slice(0, 12);
 }
 
@@ -395,13 +163,21 @@ function _settingsTaxPreset(language) {
   return SETTINGS_TAX_RATE_PRESETS[language] || SETTINGS_TAX_RATE_PRESETS.en;
 }
 
+function _settingsProfilePreset(countryProfile) {
+  return SETTINGS_COUNTRY_PROFILE_PRESETS[countryProfile] || null;
+}
+
+function _settingsInferCountryProfile(input, language) {
+  if (SETTINGS_ALLOWED_COUNTRY_PROFILES.includes(input.country_profile)) return input.country_profile;
+  return 'US';
+}
+
 function _settingsRateId(prefix, rate) {
   return prefix + 'tax-rate-' + String(rate).replace(/[^0-9]/g, '-');
 }
 
 function _settingsFormatRate(rate, language) {
-  const text = Number.isInteger(rate) ? String(rate) : String(rate);
-  return language === 'it' ? text.replace('.', ',') : text;
+  return Number.isInteger(rate) ? String(rate) : String(rate);
 }
 
 function _settingsTranslateEnglish(value) {
@@ -423,19 +199,27 @@ function _settingsMerge(settings) {
     },
   };
   const language = SETTINGS_ALLOWED_LANGUAGES.includes(merged.language) ? merged.language : DEFAULT_SETTINGS.language;
-  const taxPreset = _settingsTaxPreset(language);
-  const currency = SETTINGS_ALLOWED_CURRENCIES.includes(merged.currency) ? merged.currency : DEFAULT_SETTINGS.currency;
-  const locale = SETTINGS_ALLOWED_LOCALES.includes(merged.locale)
-    ? merged.locale
-    : taxPreset.locale;
+  const countryProfile = _settingsInferCountryProfile(input, language);
+  const profilePreset = _settingsProfilePreset(countryProfile);
+  const taxPreset = profilePreset || _settingsTaxPreset(language);
+  const currency = profilePreset
+    ? profilePreset.currency
+    : (SETTINGS_ALLOWED_CURRENCIES.includes(merged.currency) ? merged.currency : DEFAULT_SETTINGS.currency);
+  const locale = profilePreset
+    ? profilePreset.locale
+    : (SETTINGS_ALLOWED_LOCALES.includes(merged.locale) ? merged.locale : taxPreset.locale);
   const taxRates = _settingsCleanRates(merged.tax_rates);
 
+  merged.country_profile = countryProfile;
   merged.language = language;
   merged.currency = currency;
   merged.locale = locale;
-  merged.tax_label = _settingsCleanLabel(merged.tax_label, taxPreset.tax_label);
-  merged.tax_id_label = _settingsCleanLabel(merged.tax_id_label, taxPreset.tax_id_label);
+  merged.tax_label = profilePreset ? profilePreset.tax_label : _settingsCleanLabel(merged.tax_label, taxPreset.tax_label);
+  merged.tax_id_label = profilePreset ? profilePreset.tax_id_label : _settingsCleanLabel(merged.tax_id_label, taxPreset.tax_id_label);
   merged.tax_rates = taxRates.length ? taxRates : taxPreset.rates.slice();
+  merged.tax_disclaimer = countryProfile === 'US'
+    ? SETTINGS_US_TAX_DISCLAIMER
+    : _settingsCleanText(merged.tax_disclaimer, '', SETTINGS_TEXT_MAX);
   merged.theme = SETTINGS_ALLOWED_THEMES.includes(merged.theme) ? merged.theme : DEFAULT_SETTINGS.theme;
   merged.first_run_done = Boolean(merged.first_run_done);
   merged.last_backup_at = _settingsCleanText(merged.last_backup_at, '', 80);
@@ -515,10 +299,22 @@ const AppSettings = {
     return AppSettings.get().tax_rates || DEFAULT_SETTINGS.tax_rates;
   },
 
+  countryProfile() {
+    return AppSettings.get().country_profile || DEFAULT_SETTINGS.country_profile;
+  },
+
+  isUsProfile() {
+    return AppSettings.countryProfile() === 'US';
+  },
+
+  taxDisclaimer() {
+    return AppSettings.get().tax_disclaimer || '';
+  },
+
   apply() {
     const settings = AppSettings.get();
-    if (typeof C !== 'undefined') C.IVA = AppSettings.taxRates();
-    document.documentElement.lang = settings.language === 'it' ? 'it' : 'en';
+    if (typeof C !== 'undefined') C.SALES_TAX_RATES = AppSettings.taxRates();
+    document.documentElement.lang = 'en';
     if (document.documentElement.dataset) {
       document.documentElement.dataset.theme = settings.theme;
     } else if (document.documentElement.setAttribute) {
@@ -586,7 +382,9 @@ const AppSettings = {
   collectForm(prefix) {
     const value = id => document.getElementById(prefix + id)?.value?.trim?.() || '';
     const language = value('language') || 'en';
-    const preset = _settingsTaxPreset(language);
+    const countryProfile = value('country-profile') || _settingsInferCountryProfile({}, language);
+    const profilePreset = _settingsProfilePreset(countryProfile);
+    const preset = profilePreset || _settingsTaxPreset(language);
     const checkedRates = Array.from(document.querySelectorAll('input[name="' + prefix + 'tax-rates"]:checked'))
       .map(input => Number(String(input.value).trim().replace(',', '.')))
       .filter(v => Number.isFinite(v));
@@ -598,6 +396,7 @@ const AppSettings = {
     const currency = value('currency') || DEFAULT_SETTINGS.currency;
     return {
       ...AppSettings.get(),
+      country_profile: countryProfile,
       language,
       currency,
       locale: value('locale') || preset.locale,
@@ -631,15 +430,14 @@ const AppSettings = {
     return (
       '<div id="' + prefix + 'settings-form">' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;max-width:860px;">' +
-        '<label><b>' + _settingsT('settings.language', s.language) + '</b><select id="' + prefix + 'language" onchange="AppSettings.changeFormLanguage(\'' + prefix + '\')" style="width:100%;margin-top:6px;">' +
-          '<option value="en"' + (s.language === 'en' ? ' selected' : '') + '>English</option>' +
-          '<option value="it"' + (s.language === 'it' ? ' selected' : '') + '>Italiano</option>' +
+        '<label><b>' + _settingsT('settings.countryProfile', s.language) + '</b><select id="' + prefix + 'country-profile" onchange="AppSettings.changeFormCountryProfile(\'' + prefix + '\')" style="width:100%;margin-top:6px;">' +
+          '<option value="US"' + (s.country_profile === 'US' ? ' selected' : '') + '>United States</option>' +
         '</select></label>' +
         '<label><b>' + _settingsT('settings.currency', s.language) + '</b><select id="' + prefix + 'currency" style="width:100%;margin-top:6px;">' +
-          ['EUR', 'USD', 'GBP'].map(c => '<option value="' + c + '"' + (s.currency === c ? ' selected' : '') + '>' + c + '</option>').join('') +
+          ['USD'].map(c => '<option value="' + c + '"' + (s.currency === c ? ' selected' : '') + '>' + c + '</option>').join('') +
         '</select></label>' +
         '<label><b>' + _settingsT('settings.locale', s.language) + '</b><select id="' + prefix + 'locale" style="width:100%;margin-top:6px;">' +
-          ['en-US', 'en-GB', 'it-IT'].map(l => '<option value="' + l + '"' + (s.locale === l ? ' selected' : '') + '>' + l + '</option>').join('') +
+          ['en-US'].map(l => '<option value="' + l + '"' + (s.locale === l ? ' selected' : '') + '>' + l + '</option>').join('') +
         '</select></label>' +
         '<label><b>' + _settingsT('settings.taxLabel', s.language) + '</b><input id="' + prefix + 'tax-label" value="' + _settingsEsc(s.tax_label) + '" style="width:100%;margin-top:6px;"></label>' +
         '<label><b>' + _settingsT('settings.taxIdLabel', s.language) + '</b><input id="' + prefix + 'tax-id-label" value="' + _settingsEsc(s.tax_id_label) + '" style="width:100%;margin-top:6px;"></label>' +
@@ -648,6 +446,9 @@ const AppSettings = {
           '<div class="tax-rate-checklist">' + rateOptions + '</div>' +
         '</fieldset>' +
       '</div>' +
+      (s.country_profile === 'US'
+        ? '<p class="tax-guidance" style="max-width:860px;margin:12px 0 0;color:#64748B;font-size:12px;">' + _settingsEsc(_settingsT('settings.taxDisclaimer', s.language)) + '</p>'
+        : '') +
       '<div class="sec" style="margin-top:24px;">' + _settingsT('settings.company', s.language) + '</div>' +
       '<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;max-width:860px;">' +
         '<label><b>' + _settingsT('settings.companyName', s.language) + '</b><input id="' + prefix + 'company-name" value="' + _settingsEsc(company.name) + '" style="width:100%;margin-top:6px;"></label>' +
@@ -662,12 +463,15 @@ const AppSettings = {
   },
 
   changeFormLanguage(prefix) {
-    const language = document.getElementById(prefix + 'language')?.value || DEFAULT_SETTINGS.language;
-    const preset = _settingsTaxPreset(language);
+    const language = DEFAULT_SETTINGS.language;
+    const countryProfile = 'US';
+    const preset = _settingsProfilePreset(countryProfile) || _settingsTaxPreset(language);
     const current = AppSettings.collectForm(prefix);
     const updated = _settingsMerge({
       ...current,
+      country_profile: countryProfile,
       language,
+      currency: preset.currency || current.currency,
       locale: preset.locale,
       tax_label: preset.tax_label,
       tax_id_label: preset.tax_id_label,
@@ -676,6 +480,27 @@ const AppSettings = {
     const wrapper = document.getElementById(prefix + 'settings-form');
     if (wrapper) wrapper.outerHTML = AppSettings.formHtml(updated, prefix);
     AppSettings.refreshFormLanguage(prefix, language);
+  },
+
+  changeFormCountryProfile(prefix) {
+    const countryProfile = document.getElementById(prefix + 'country-profile')?.value || DEFAULT_SETTINGS.country_profile;
+    const preset = _settingsProfilePreset(countryProfile);
+    const current = AppSettings.collectForm(prefix);
+    const updated = _settingsMerge({
+      ...current,
+      country_profile: countryProfile,
+      ...(preset ? {
+        language: preset.language,
+        currency: preset.currency,
+        locale: preset.locale,
+        tax_label: preset.tax_label,
+        tax_id_label: preset.tax_id_label,
+        tax_rates: preset.rates,
+      } : {}),
+    });
+    const wrapper = document.getElementById(prefix + 'settings-form');
+    if (wrapper) wrapper.outerHTML = AppSettings.formHtml(updated, prefix);
+    AppSettings.refreshFormLanguage(prefix, updated.language);
   },
 
   refreshFormLanguage(prefix, language) {
@@ -695,32 +520,31 @@ const AppSettings = {
 
   async loadDemoData() {
     if (!confirm('Replace current app data with demo data?')) return;
-    const tax = AppSettings.taxRates().includes(22)
-      ? 22
-      : (AppSettings.taxRates()[AppSettings.taxRates().length - 1] || 0);
+    const rates = AppSettings.taxRates();
+    const tax = rates.includes(8.25) ? 8.25 : (rates[rates.length - 1] || 0);
     for (const table of Object.keys(TABLE_KEYS)) await DB.clear(table);
     await DB.insertBatch('anagrafica', [
-      { codice: 'PRJ-001', nome: 'Website redesign', cliente: 'Acme Studio', data_inizio: '01/05/2026', data_fine_prev: '30/06/2026', stato: 'In corso', responsabile: 'Alex', tipologia: 'Progettazione', note: 'Demo project' },
-      { codice: 'PRJ-002', nome: 'Retail fit-out', cliente: 'North Retail', data_inizio: '15/05/2026', data_fine_prev: '20/07/2026', stato: 'Pianificato', responsabile: 'Jamie', tipologia: 'Allestimento', note: 'Demo project' },
+      { codice: 'PRJ-001', nome: 'Website redesign', cliente: 'Acme Studio', data_inizio: '2026-05-01', data_fine_prev: '2026-06-30', stato: 'In progress', responsabile: 'Alex', tipologia: 'Design', note: 'Demo project' },
+      { codice: 'PRJ-002', nome: 'Retail fit-out', cliente: 'North Retail', data_inizio: '2026-05-15', data_fine_prev: '2026-07-20', stato: 'Planned', responsabile: 'Jamie', tipologia: 'Setup', note: 'Demo project' },
     ]);
     await DB.insertBatch('budget_costi', [
-      { codice: 'PRJ-001', categoria: 'Manodopera', descrizione: 'Project work', qta: 80, um: 'h', costo_unitario: 45, importo: 3600, aliq_iva: tax, note: '' },
-      { codice: 'PRJ-001', categoria: 'Materiali', descrizione: 'Software and assets', qta: 1, um: 'lot', costo_unitario: 650, importo: 650, aliq_iva: tax, note: '' },
-      { codice: 'PRJ-002', categoria: 'Subappalti', descrizione: 'External contractor', qta: 1, um: 'lot', costo_unitario: 4200, importo: 4200, aliq_iva: tax, note: '' },
+      { codice: 'PRJ-001', categoria: 'Labor', descrizione: 'Project work', qta: 80, um: 'h', costo_unitario: 45, importo: 3600, tax_rate: tax, note: '' },
+      { codice: 'PRJ-001', categoria: 'Materials', descrizione: 'Software and assets', qta: 1, um: 'lot', costo_unitario: 650, importo: 650, tax_rate: tax, note: '' },
+      { codice: 'PRJ-002', categoria: 'Subcontractors', descrizione: 'External contractor', qta: 1, um: 'lot', costo_unitario: 4200, importo: 4200, tax_rate: tax, note: '' },
     ]);
     await DB.insertBatch('budget_ricavi', [
-      { codice: 'PRJ-001', tipo_ricavo: 'Fixed fee', descrizione: 'Project fee', importo: 8200, aliq_iva: tax, note: '' },
-      { codice: 'PRJ-002', tipo_ricavo: 'Quote', descrizione: 'Project fee', importo: 9800, aliq_iva: tax, note: '' },
+      { codice: 'PRJ-001', tipo_ricavo: 'Fixed fee', descrizione: 'Project fee', importo: 8200, tax_rate: tax, note: '' },
+      { codice: 'PRJ-002', tipo_ricavo: 'Quote', descrizione: 'Project fee', importo: 9800, tax_rate: tax, note: '' },
     ]);
     await DB.insertBatch('consuntivo_costi', [
-      { codice: 'PRJ-001', categoria: 'Manodopera', descrizione: 'Actual work', qta: 42, um: 'h', costo_unitario: 45, importo: 1890, aliq_iva: tax, note: '' },
+      { codice: 'PRJ-001', categoria: 'Labor', descrizione: 'Actual work', qta: 42, um: 'h', costo_unitario: 45, importo: 1890, tax_rate: tax, note: '' },
     ]);
     await DB.insertBatch('consuntivo_ricavi', [
-      { codice: 'PRJ-001', tipo_ricavo: 'Deposit', descrizione: 'First invoice', importo: 4100, aliq_iva: tax, note: '' },
+      { codice: 'PRJ-001', tipo_ricavo: 'Deposit', descrizione: 'First invoice', importo: 4100, tax_rate: tax, note: '' },
     ]);
     await DB.insertBatch('cg_budget', [
-      { voce: 'Software subscriptions', aliq_iva: tax, gen: 120, feb: 120, mar: 120, apr: 120, mag: 120, giu: 120, lug: 120, ago: 120, set: 120, ott: 120, nov: 120, dic: 120 },
-      { voce: 'Accounting', aliq_iva: tax, gen: 180, feb: 180, mar: 180, apr: 180, mag: 180, giu: 180, lug: 180, ago: 180, set: 180, ott: 180, nov: 180, dic: 180 },
+      { voce: 'Software subscriptions', tax_rate: tax, gen: 120, feb: 120, mar: 120, apr: 120, mag: 120, giu: 120, lug: 120, ago: 120, set: 120, ott: 120, nov: 120, dic: 120 },
+      { voce: 'Accounting', tax_rate: tax, gen: 180, feb: 180, mar: 180, apr: 180, mag: 180, giu: 180, lug: 180, ago: 180, set: 180, ott: 180, nov: 180, dic: 180 },
     ]);
     DB.invalidateCache();
     App.go('dashboard');

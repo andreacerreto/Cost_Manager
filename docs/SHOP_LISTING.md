@@ -17,5 +17,10 @@ actuals, overheads and client quotes. No subscription. No account. Excel export 
 - Builds client-facing printable quotes.
 - Exports Excel workbooks for consultants and accountants.
 - Includes JSON backup and restore.
-- English and Italian interface options.
+- US-only English interface.
 - Configurable currency and tax labels.
+- US manual Sales Tax mode with tax-exempt and state/county notes.
+
+## Compliance Note
+
+The app helps users estimate, document and export manually entered Sales Tax. It does not provide automatic sales tax compliance, rate lookup, nexus determination, filing support or legal/tax advice.

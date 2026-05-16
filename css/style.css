@@ -222,7 +222,7 @@
   .sec.blue { border-left-color: var(--blue); color: var(--blue); }
   .sec.grey { border-left-color: var(--grey); color: var(--grey); }
 
-  .iva-hdr {
+  .tax-hdr {
     display: flex;
     align-items: center;
     gap: 10px;
@@ -268,9 +268,9 @@
     border-bottom: 1.5px solid var(--border-light);
   }
 
-  /* Retrocompatibilità classi JS esistenti */
+  /* Existing table header variants */
   thead th.blue { color: var(--blue); }
-  thead th.iva  { color: var(--grey); }
+  thead th.tax  { color: var(--grey); }
 
   tbody tr:nth-child(even) { background: #FAFBFA; }
   tbody tr:hover           { background: var(--green-light); transition: background .12s; }
@@ -289,7 +289,7 @@
     color: var(--green-dark);
   }
 
-  tfoot td.iva-tot {
+  tfoot td.tax-tot {
     background: var(--grey-light);
     color: var(--grey);
   }
@@ -692,10 +692,10 @@
   }
 
   /* Colori specifici per stato quando il pill NON è attivo */
-  .dash-fil-pill[onclick*="Completato"]:not(.dash-fil-active)  { border-color: #B7E4C7; color: #1B5E20; }
-  .dash-fil-pill[onclick*="In corso"]:not(.dash-fil-active)    { border-color: #BBDEFB; color: var(--blue); }
-  .dash-fil-pill[onclick*="Pianificato"]:not(.dash-fil-active) { border-color: #FFE082; color: var(--amber-dark); }
-  .dash-fil-pill[onclick*="Sospeso"]:not(.dash-fil-active)     { border-color: #FFCDD2; color: var(--red); }
+  .dash-fil-pill[onclick*="Completed"]:not(.dash-fil-active)   { border-color: #B7E4C7; color: #1B5E20; }
+  .dash-fil-pill[onclick*="In progress"]:not(.dash-fil-active) { border-color: #BBDEFB; color: var(--blue); }
+  .dash-fil-pill[onclick*="Planned"]:not(.dash-fil-active)     { border-color: #FFE082; color: var(--amber-dark); }
+  .dash-fil-pill[onclick*="On hold"]:not(.dash-fil-active)     { border-color: #FFCDD2; color: var(--red); }
 
   /* Label contatore sotto la tabella */
   .dash-count-lbl {
@@ -950,7 +950,7 @@
   .card.c-grey .value { color: var(--color-deep-slate); }
 
   .sec,
-  .iva-hdr {
+  .tax-hdr {
     border-left: 0;
     border-bottom: 1px solid var(--border-light);
     color: var(--color-ink-black);
@@ -989,7 +989,7 @@
   }
 
   thead th.blue,
-  thead th.iva {
+  thead th.tax {
     color: var(--color-ash-gray);
   }
 
@@ -1317,7 +1317,7 @@
   html[data-theme="dark"] h2,
   html[data-theme="dark"] h3,
   html[data-theme="dark"] .sec,
-  html[data-theme="dark"] .iva-hdr,
+  html[data-theme="dark"] .tax-hdr,
   html[data-theme="dark"] .sidebar-logo h2,
   html[data-theme="dark"] .proj-bar label,
   html[data-theme="dark"] .tax-rate-field legend {
@@ -1384,9 +1384,9 @@
 
   a,
   [onclick],
-  .dash-fil-pill[onclick*="Completato"]:not(.dash-fil-active),
-  .dash-fil-pill[onclick*="In corso"]:not(.dash-fil-active),
-  .dash-fil-pill[onclick*="Pianificato"]:not(.dash-fil-active) {
+  .dash-fil-pill[onclick*="Completed"]:not(.dash-fil-active),
+  .dash-fil-pill[onclick*="In progress"]:not(.dash-fil-active),
+  .dash-fil-pill[onclick*="Planned"]:not(.dash-fil-active) {
     color: inherit;
   }
 

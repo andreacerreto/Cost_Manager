@@ -25,7 +25,7 @@ Pages.budgetCons = async function(type) {
   /* Nessun progetto disponibile */
   if (!projs.length) {
     el.innerHTML =
-      '<h1>' + (type === 'budget' ? 'Budget Preventivo' : 'Consuntivo') + '</h1>' +
+      '<h1>' + (type === 'budget' ? 'Budget' : 'Actuals') + '</h1>' +
       '<div class="alert warn">No projects yet. Add one in <b>Projects</b>.</div>';
     return;
   }
@@ -37,8 +37,8 @@ Pages.budgetCons = async function(type) {
   const info = projs.find(p => p.codice === App.proj) ?? projs[0];
 
   /* Etichette colonne in base al tipo */
-  const cLabel = type === 'budget' ? 'Costo Unit. Prev.' : 'Costo Unit. Eff.';
-  const iLabel = type === 'budget' ? 'Importo Prev.'     : 'Importo Eff.';
+  const cLabel = type === 'budget' ? 'Planned Unit Cost' : 'Actual Unit Cost';
+  const iLabel = type === 'budget' ? 'Planned Amount'    : 'Actual Amount';
 
   /* Carica righe dal DB filtrate per progetto corrente
      NOTA: underscore — budget_costi, consuntivo_ricavi ecc. */
@@ -59,8 +59,8 @@ Pages.budgetCons = async function(type) {
       '<td><input data-role="um"  value="' + F.esc(r.um) + '" class="w-um"></td>' +
       '<td><input data-role="cu"  type="number" value="' + (r.costo_unitario || '') + '" step="0.01" min="0"></td>' +
       '<td data-role="ct"  class="r"><b>' + F.money(tot) + '</b></td>' +
-      '<td><select data-role="iva">' + F.sel(C.IVA, r.aliq_iva ?? F.defaultTaxRate()) + '</select></td>' +
-      '<td data-role="ivav" class="r">' + F.money(tot * F.iva(r.aliq_iva ?? F.defaultTaxRate())) + '</td>' +
+      '<td><select data-role="tax">' + F.sel(C.SALES_TAX_RATES, r.tax_rate ?? F.defaultTaxRate()) + '</select></td>' +
+      '<td data-role="taxv" class="r">' + F.money(tot * F.taxMultiplier(r.tax_rate ?? F.defaultTaxRate())) + '</td>' +
       '<td><input data-role="note" value="' + F.esc(r.note) + '"></td>' +
     '</tr>';
   }
@@ -68,11 +68,11 @@ Pages.budgetCons = async function(type) {
   /* Genera una riga ricavo */
   function ricavoRow(r) {
     return '<tr>' +
-      '<td><input data-role="tipo" value="' + F.esc(r.tipo_ricavo) + '" placeholder="Acconto, SAL, Saldo"></td>' +
+      '<td><input data-role="tipo" value="' + F.esc(r.tipo_ricavo) + '" placeholder="Deposit, milestone, balance"></td>' +
       '<td><input data-role="des"  value="' + F.esc(r.descrizione) + '"></td>' +
       '<td><input data-role="imp"  type="number" value="' + (r.importo || '') + '" step="0.01" min="0"></td>' +
-      '<td><select data-role="iva">' + F.sel(C.IVA, r.aliq_iva ?? F.defaultTaxRate()) + '</select></td>' +
-      '<td data-role="ivav" class="r">' + F.money((+r.importo || 0) * F.iva(r.aliq_iva ?? F.defaultTaxRate())) + '</td>' +
+      '<td><select data-role="tax">' + F.sel(C.SALES_TAX_RATES, r.tax_rate ?? F.defaultTaxRate()) + '</select></td>' +
+      '<td data-role="taxv" class="r">' + F.money((+r.importo || 0) * F.taxMultiplier(r.tax_rate ?? F.defaultTaxRate())) + '</td>' +
       '<td><input data-role="note" value="' + F.esc(r.note) + '"></td>' +
     '</tr>';
   }
@@ -85,55 +85,55 @@ Pages.budgetCons = async function(type) {
 
   /* Costruzione HTML pagina */
   el.innerHTML =
-    '<h1>' + (type === 'budget' ? 'Budget Preventivo' : 'Consuntivo') + '</h1>' +
+    '<h1>' + (type === 'budget' ? 'Budget' : 'Actuals') + '</h1>' +
 
     /* Barra selezione progetto */
     '<div class="proj-bar">' +
-      '<label>Progetto</label>' +
+      '<label>Project</label>' +
       '<select onchange="App.proj=this.value; Pages.' + type + '();">' + projOpts + '</select>' +
       '<span class="proj-tag">' + F.esc(info.cliente) + ' \u2014 ' + F.esc(info.stato) + '</span>' +
     '</div>' +
 
     /* Tabella COSTI */
-    '<div class="sec">COSTI</div>' +
+    '<div class="sec">COSTS</div>' +
     '<div class="tbl-wrap"><table>' +
       '<thead><tr>' +
-        '<th>Categoria</th><th>Descrizione</th><th>Q.t\u00e0</th><th>U.M.</th>' +
-        '<th>' + F.esc(cLabel) + '</th><th>Costo Tot.</th>' +
-        '<th class="iva">' + F.esc(F.taxLabel()) + ' %</th><th class="iva">' + F.esc(F.taxLabel()) + '</th><th>Note</th>' +
+        '<th>Category</th><th>Description</th><th>Qty</th><th>U.M.</th>' +
+        '<th>' + F.esc(cLabel) + '</th><th>Total Cost</th>' +
+        '<th class="tax">' + F.esc(F.taxLabel()) + ' %</th><th class="tax">' + F.esc(F.taxLabel()) + '</th><th>Note</th>' +
       '</tr></thead>' +
       '<tbody id="' + type + '-costi">' + costi.map(costoRow).join('') + '</tbody>' +
       '<tfoot><tr>' +
-        '<td colspan="5" class="r">TOTALE COSTI</td>' +
+        '<td colspan="5" class="r">TOTAL COSTS</td>' +
         '<td id="' + type + '-tc" class="r"></td>' +
-        '<td class="iva-tot">TOT ' + F.esc(F.taxLabel()) + '</td>' +
-        '<td id="' + type + '-ic" class="r iva-tot"></td>' +
+        '<td class="tax-tot">TOT ' + F.esc(F.taxLabel()) + '</td>' +
+        '<td id="' + type + '-ic" class="r tax-tot"></td>' +
         '<td></td>' +
       '</tr></tfoot>' +
     '</table></div>' +
-    '<button class="btn-add" onclick="Pages.addCostoRow(\'' + type + '\')">+ Aggiungi riga costo</button>' +
+    '<button class="btn-add" onclick="Pages.addCostoRow(\'' + type + '\')">+ Add cost line</button>' +
 
     /* Tabella RICAVI */
-    '<div class="sec blue">RICAVI</div>' +
+    '<div class="sec blue">REVENUE</div>' +
     '<div class="tbl-wrap"><table>' +
       '<thead><tr>' +
-        '<th class="blue">Tipo Ricavo</th><th class="blue">Descrizione</th>' +
+        '<th class="blue">Revenue Type</th><th class="blue">Description</th>' +
         '<th class="blue">' + F.esc(iLabel) + '</th>' +
-        '<th class="iva">' + F.esc(F.taxLabel()) + ' %</th><th class="iva">' + F.esc(F.taxLabel()) + '</th><th class="blue">Note</th>' +
+        '<th class="tax">' + F.esc(F.taxLabel()) + ' %</th><th class="tax">' + F.esc(F.taxLabel()) + '</th><th class="blue">Note</th>' +
       '</tr></thead>' +
       '<tbody id="' + type + '-ricavi">' + ricavi.map(ricavoRow).join('') + '</tbody>' +
       '<tfoot><tr>' +
-        '<td colspan="2" class="r">TOTALE RICAVI</td>' +
+        '<td colspan="2" class="r">TOTAL REVENUE</td>' +
         '<td id="' + type + '-tr" class="r"></td>' +
-        '<td class="iva-tot">TOT ' + F.esc(F.taxLabel()) + '</td>' +
-        '<td id="' + type + '-ir" class="r iva-tot"></td>' +
+        '<td class="tax-tot">TOT ' + F.esc(F.taxLabel()) + '</td>' +
+        '<td id="' + type + '-ir" class="r tax-tot"></td>' +
         '<td></td>' +
       '</tr></tfoot>' +
     '</table></div>' +
-    '<button class="btn-add" onclick="Pages.addRicavoRow(\'' + type + '\')">+ Aggiungi riga ricavo</button>' +
+    '<button class="btn-add" onclick="Pages.addRicavoRow(\'' + type + '\')">+ Add revenue line</button>' +
 
     /* Riepilogo progetto */
-    '<div class="sec grey" style="margin-top:18px;">Riepilogo Progetto</div>' +
+    '<div class="sec grey" style="margin-top:18px;">Project Summary</div>' +
     '<div class="recap" id="' + type + '-recap"></div>';
 
   /* Listener input/change per ricalcolo e autosave */
@@ -153,23 +153,23 @@ Pages.bcUpdate = function(type) {
     const g = function(role) { return row.querySelector('[data-role="' + role + '"]')?.value ?? ''; };
     const qty = +g('qty') || 0;
     const cu  = +g('cu')  || 0;
-    const iva = F.iva(g('iva') || F.defaultTaxRate());
+    const taxMultiplier = F.taxMultiplier(g('tax') || F.defaultTaxRate());
     tc += qty * cu;
-    ic += qty * cu * iva;
+    ic += qty * cu * taxMultiplier;
     const ctEl = row.querySelector('[data-role="ct"]');
     if (ctEl) ctEl.innerHTML = '<b>' + F.money(qty * cu) + '</b>';
-    const ivEl = row.querySelector('[data-role="ivav"]');
-    if (ivEl) ivEl.textContent = F.money(qty * cu * iva);
+    const ivEl = row.querySelector('[data-role="taxv"]');
+    if (ivEl) ivEl.textContent = F.money(qty * cu * taxMultiplier);
   });
 
   /* Somma righe ricavi */
   document.querySelectorAll('#' + type + '-ricavi tr').forEach(function(row) {
     const imp = +(row.querySelector('[data-role="imp"]')?.value) || 0;
-    const iva = F.iva(row.querySelector('[data-role="iva"]')?.value || F.defaultTaxRate());
+    const taxMultiplier = F.taxMultiplier(row.querySelector('[data-role="tax"]')?.value || F.defaultTaxRate());
     tr += imp;
-    ir += imp * iva;
-    const ivEl = row.querySelector('[data-role="ivav"]');
-    if (ivEl) ivEl.textContent = F.money(imp * iva);
+    ir += imp * taxMultiplier;
+    const ivEl = row.querySelector('[data-role="taxv"]');
+    if (ivEl) ivEl.textContent = F.money(imp * taxMultiplier);
   });
 
   /* Aggiorna celle tfoot */
@@ -186,11 +186,11 @@ Pages.bcUpdate = function(type) {
   const recap = document.getElementById(type + '-recap');
   if (recap) {
     recap.innerHTML =
-      F.kpi('Totale Costi',   F.money(tc), '', '') +
-      F.kpi('Totale Ricavi',  F.money(tr), '', '') +
-      F.kpi('Margine Lordo',  F.money(tr - tc), '', tr - tc < 0 ? 'c-red' : 'c-margin') +
+      F.kpi('Total Costs',    F.money(tc), '', '') +
+      F.kpi('Total Revenue',  F.money(tr), '', '') +
+      F.kpi('Gross Margin',   F.money(tr - tc), '', tr - tc < 0 ? 'c-red' : 'c-margin') +
       F.kpi(F.taxLabel() + ' Net', F.money(ir - ic), '', 'c-grey') +
-      F.kpi('Margine %',      F.pct(tr ? (tr - tc) / tr * 100 : NaN), '', '');
+      F.kpi('Margin %',       F.pct(tr ? (tr - tc) / tr * 100 : NaN), '', '');
   }
 
   /* Pianifica autosave */
@@ -217,7 +217,7 @@ Pages.bcSave = async function(type) {
       codice: App.proj, categoria: g(row, 'cat'),
       descrizione: des, qta: qty, um: g(row, 'um'),
       costo_unitario: cu, importo: qty * cu,
-      aliq_iva: g(row, 'iva') || F.defaultTaxRate(), note: g(row, 'note'),
+      tax_rate: g(row, 'tax') || F.defaultTaxRate(), note: g(row, 'note'),
     });
   }
 
@@ -228,7 +228,7 @@ Pages.bcSave = async function(type) {
     ricavoRows.push({
       codice: App.proj, tipo_ricavo: tipo,
       descrizione: g(row, 'des'), importo: imp,
-      aliq_iva: g(row, 'iva') || F.defaultTaxRate(), note: g(row, 'note'),
+      tax_rate: g(row, 'tax') || F.defaultTaxRate(), note: g(row, 'note'),
     });
   }
 
@@ -247,8 +247,8 @@ Pages.addCostoRow = function(type) {
       '<td><input data-role="um"  class="w-um"></td>' +
       '<td><input data-role="cu"  type="number" step="0.01" min="0"></td>' +
       '<td data-role="ct"  class="r"><b>' + F.money(0) + '</b></td>' +
-      '<td><select data-role="iva">' + F.sel(C.IVA, F.defaultTaxRate()) + '</select></td>' +
-      '<td data-role="ivav" class="r">' + F.money(0) + '</td>' +
+      '<td><select data-role="tax">' + F.sel(C.SALES_TAX_RATES, F.defaultTaxRate()) + '</select></td>' +
+      '<td data-role="taxv" class="r">' + F.money(0) + '</td>' +
       '<td><input data-role="note" value=""></td>' +
     '</tr>'
   );
@@ -258,11 +258,11 @@ Pages.addCostoRow = function(type) {
 Pages.addRicavoRow = function(type) {
   document.getElementById(type + '-ricavi').insertAdjacentHTML('beforeend',
     '<tr>' +
-      '<td><input data-role="tipo" placeholder="Acconto, SAL, Saldo"></td>' +
+      '<td><input data-role="tipo" placeholder="Deposit, milestone, balance"></td>' +
       '<td><input data-role="des"  value=""></td>' +
       '<td><input data-role="imp"  type="number" step="0.01" min="0"></td>' +
-      '<td><select data-role="iva">' + F.sel(C.IVA, F.defaultTaxRate()) + '</select></td>' +
-      '<td data-role="ivav" class="r">' + F.money(0) + '</td>' +
+      '<td><select data-role="tax">' + F.sel(C.SALES_TAX_RATES, F.defaultTaxRate()) + '</select></td>' +
+      '<td data-role="taxv" class="r">' + F.money(0) + '</td>' +
       '<td><input data-role="note" value=""></td>' +
     '</tr>'
   );

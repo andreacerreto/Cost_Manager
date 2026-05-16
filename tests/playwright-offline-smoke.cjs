@@ -73,7 +73,7 @@ async function main() {
       { codice: 'PRJ-X', nome: '=Formula Project', cliente: 'Client A', stato: 'In corso' },
     ]);
     await DB.insertBatch('budget_ricavi', [
-      { codice: 'PRJ-X', tipo_ricavo: 'Fee', descrizione: 'Project fee', importo: 1000, aliq_iva: 22 },
+      { codice: 'PRJ-X', tipo_ricavo: 'Fee', descrizione: 'Project fee', importo: 1000, tax_rate: 8.25 },
     ]);
 
     let capturedExport = null;
@@ -90,7 +90,7 @@ async function main() {
 
     const wb = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
-      { codice: 'PRJ-IMPORT', nome: 'Imported Project', cliente: 'Client B', stato: 'Pianificato' },
+      { codice: 'PRJ-IMPORT', nome: 'Imported Project', cliente: 'Client B', stato: 'Planned' },
     ]), 'Projects');
     XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet([
       { Metric: 'Ignored', Value: 1 },

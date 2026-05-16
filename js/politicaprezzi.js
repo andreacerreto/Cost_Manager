@@ -1,13 +1,13 @@
-﻿'use strict';
+'use strict';
 
 /* ============================================================
- * POLITICAPREZZI.JS — Schermata "Impostazioni Preventivi"
+ * POLITICAPREZZI.JS - Quote pricing settings screen.
  *
  * Permette all'imprenditore di definire:
- *   1. Dati aziendali (nome, indirizzo, CAP, tel, email, P.IVA)
+ *   1. Company details (name, address, ZIP, phone, email, Tax ID)
  *      usati nell'intestazione dei PDF preventivo.
  *   2. Overhead% teorico + Profit% desiderato (a livello aziendale)
- *   3. Markup% per ogni categoria di costo (Manodopera, Materiali…)
+ *   3. Markup% for each cost category (Labor, Materials, and so on)
  *
  * I valori vengono salvati in storage locale (tabella politica_prezzi)
  * e usati come pre-compilazione automatica nel modulo Preventivi.
@@ -38,12 +38,21 @@ Pages.politicaprezzi = async function () {
   const valStr = (key, def) => pol[key] ?? def ?? '';
   const sampleStr = function (key, def) {
     const value = valStr(key, def);
+    const lower = String(value || '').toLowerCase();
+    if (lower.includes('s.r.l') || lower.endsWith('.' + 'it') || lower.includes('via ') || lower.includes('roma')) {
+      const usFallbacks = {
+        azienda_nome: 'Greenfield Services LLC',
+        azienda_indirizzo: '123 Market St, Austin, TX',
+        azienda_cap: '78701',
+        azienda_tel: '(512) 555-0184',
+        azienda_email: 'billing@greenfield.com',
+        company_tax_id: '12-3456789',
+      };
+      return usFallbacks[key] || '';
+    }
     const samples = {
-      'Azienda S.r.l.': 'Greenfield Services LLC',
-      'Via Roma, 1 — 00100 Roma (RM)': '123 Market St, Austin, TX',
       '00100': '78701',
       '06 12345678': '(512) 555-0184',
-      'info@azienda.it': 'billing@greenfield.com',
       '12345678901': '12-3456789',
     };
     return samples[value] || value;
@@ -80,7 +89,7 @@ Pages.politicaprezzi = async function () {
     '<h1>Pricing Settings</h1>' +
 
     /* =========================================================
-     * SEZIONE 0: Dati Aziendali
+     * SECTION 0: Company details
      * I dati qui inseriti vengono usati nell’intestazione PDF.
      * ========================================================= */
     '<div class="sec">Company Details</div>' +
@@ -125,17 +134,17 @@ Pages.politicaprezzi = async function () {
         '</div>' +
       '</div>' +
 
-      /* Riga 4: partita IVA */
+      /* Row 4: Tax ID */
       '<div>' +
         '<label style="display:block;font-size:12px;font-weight:700;color:#374151;margin-bottom:6px;">Tax ID</label>' +
-        '<input id="pp-az-piva" type="text" style="width:200px;" placeholder="Example: 12-3456789" maxlength="20"' +
-        '  value="' + F.esc(sampleStr('azienda_piva', appCompany.tax_id)) + '">' +
+        '<input id="pp-company-tax-id" type="text" style="width:200px;" placeholder="Example: 12-3456789" maxlength="20"' +
+        '  value="' + F.esc(sampleStr('company_tax_id', appCompany.tax_id)) + '">' +
       '</div>' +
 
     '</div>' +
 
     /* =========================================================
-     * SEZIONE 1: Obiettivi Aziendali (overhead + profit)
+     * SECTION 1: Company targets (overhead + profit)
      * ========================================================= */
     '<div class="sec">Company Targets</div>' +
     '<div style="background:#F8FAFC;border:1px solid #E2E8F0;border-radius:10px;' +
@@ -308,7 +317,7 @@ Pages._ppSave = async function () {
     azienda_cap:       gv('pp-az-cap'),
     azienda_tel:       gv('pp-az-tel'),
     azienda_email:     gv('pp-az-email'),
-    azienda_piva:      gv('pp-az-piva'),
+    company_tax_id:    gv('pp-company-tax-id'),
 
     /* Obiettivi aziendali */
     overhead_pct: +document.getElementById('pp-overhead').value || 0,
@@ -343,8 +352,7 @@ Pages._ppSave = async function () {
     }
   } catch (err) {
     /* Mostra l'errore reale per il debug */
-    const prefix = AppSettings.get().language === 'it' ? 'Errore salvataggio: ' : 'Save error: ';
-    alert(prefix + (err.message || JSON.stringify(err)));
+    alert('Save error: ' + (err.message || JSON.stringify(err)));
     return;
   }
 
@@ -357,13 +365,13 @@ Pages._ppSave = async function () {
       postal_code: data.azienda_cap,
       phone: data.azienda_tel,
       email: data.azienda_email,
-      tax_id: data.azienda_piva,
+      tax_id: data.company_tax_id,
     },
   });
 
   /* Feedback visivo */
   const msg = document.getElementById('pp-save-msg');
-  msg.textContent = AppSettings.get().language === 'it' ? 'Salvato' : 'Saved';
+  msg.textContent = 'Saved';
   msg.style.display = 'inline';
   setTimeout(function () { msg.style.display = 'none'; }, 3000);
 };
@@ -402,11 +410,11 @@ Pages._markupBadge = function (markup, margineTarget) {
   let color, label;
 
   if (sugg <= 0) {
-    color = '#64748B'; label = '— nessun obiettivo';
+    color = '#64748B'; label = 'No target';
   } else if (markup >= sugg) {
-    color = '#2E7D32'; label = '✔ Sopra obiettivo';
+    color = '#2E7D32'; label = 'Above target';
   } else if (markup >= sugg * 0.8) {
-    color = '#F9A825'; label = '⚠ Vicino al limite';
+    color = '#F9A825'; label = 'Near target';
   } else {
     color = '#C62828'; label = 'Below target';
   }

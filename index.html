@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="it">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,15 +10,15 @@
   <!-- CSS -->
   <link rel="stylesheet" href="css/style.css">
 
-  <!-- CSS stampa: nasconde colonne interne e sidebar durante window.print() -->
+  <!-- Print CSS: hides internal columns and navigation during window.print(). -->
   <style>
     @media print {
-      /* Nasconde tutta l'interfaccia tranne il preventivo */
+      /* Hide the app shell and internal quote controls. */
       #sidebar, #save-bar, .proj-bar, .btn-add,
-      [data-role="cu"],          /* input costo interno */
-      th:nth-child(5),           /* intestazione colonna Costo Int. */
-      td:nth-child(5),           /* celle colonna Costo Int. */
-      #prev-recap,               /* riepilogo margine interno */
+      [data-role="cu"],          /* internal cost input */
+      th:nth-child(5),           /* internal cost header */
+      td:nth-child(5),           /* internal cost cells */
+      #prev-recap,               /* internal margin summary */
       button { display: none !important; }
 
       #main { margin-left: 0 !important; padding: 10px !important; }
@@ -75,10 +75,10 @@
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/></svg>
         <span data-i18n="nav.analytics">Analytics</span></a>
 
-      <!-- Separatore sezione Preventivi -->
+      <!-- Quotes section separator -->
       <div style="margin:10px 18px;border-top:1px solid rgba(255,255,255,.10);"></div>
 
-      <!-- Voce: Preventivi Cliente -->
+      <!-- Customer Quotes -->
       <a onclick="App.go('preventivi')"       id="nav-preventivi">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
@@ -89,7 +89,7 @@
         </svg>
         <span data-i18n="nav.quotes">Quotes</span></a>
 
-      <!-- Voce: Impostazioni Preventivi (ex Impostazioni Prezzi) -->
+      <!-- Pricing Settings -->
       <a onclick="App.go('politicaprezzi')"   id="nav-politicaprezzi">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
@@ -105,7 +105,7 @@
         </svg>
         <span data-i18n="nav.pricing">Pricing Settings</span></a>
 
-      <!-- Separatore utilità -->
+      <!-- Utility separator -->
       <div style="margin:10px 18px;border-top:1px solid rgba(255,255,255,.10);"></div>
 
       <a onclick="exportExcel()"         id="nav-export">
@@ -179,7 +179,7 @@
   </div>
 
   <!-- ============================================================
-       AREA PRINCIPALE — pagine renderizzate via JS
+       MAIN AREA - pages rendered by JS
        ============================================================ -->
   <div id="main">
     <div id="page-dashboard"      class="page active"></div>
@@ -189,21 +189,21 @@
     <div id="page-varianze"       class="page"></div>
     <div id="page-costigenerali"  class="page"></div>
     <div id="page-analytics"      class="page"></div>
-    <!-- Modulo Preventivi -->
+    <!-- Quotes module -->
     <div id="page-preventivi"     class="page"></div>
     <div id="page-politicaprezzi" class="page"></div>
     <div id="page-backup"         class="page"></div>
     <div id="page-settings"       class="page"></div>
   </div>
 
-  <!-- Input nascosto per import Excel -->
+  <!-- Hidden inputs for imports/restores -->
   <input type="file" id="import-excel-input" accept=".xlsx,.xls"
     style="display:none" onchange="importExcel(event)">
   <input type="file" id="restore-backup-input" accept=".json"
     style="display:none" onchange="restoreBackupJson(event)">
 
   <!-- ============================================================
-       JAVASCRIPT — ordine di caricamento critico
+       JAVASCRIPT - load order matters
        ============================================================ -->
   <script src="js/config.js"></script>
   <script src="js/database.js"></script>
@@ -219,7 +219,7 @@
   <script src="vendor/sheetjs/xlsx.full.min.js"></script>
   <script src="js/excel.js"></script>
   <script src="js/analytics.js"></script>
-  <!-- Modulo Preventivi (caricato dopo budget.js da cui dipende per i pattern) -->
+  <!-- Quotes module, loaded after budget.js for shared patterns -->
   <script src="js/politicaprezzi.js"></script>
   <script src="js/preventivi.js"></script>
   <script src="js/app.js"></script>

@@ -18,16 +18,6 @@ const EXCEL_OPERATIONAL_SHEETS = {
   'Quotes': 'preventivi',
   'Quote Lines': 'preventivi_righe',
 
-  /* Backward compatible Italian sheet names */
-  'Anagrafica': 'anagrafica',
-  'Budget Costi': 'budget_costi',
-  'Budget Ricavi': 'budget_ricavi',
-  'Consuntivo Costi': 'consuntivo_costi',
-  'Consuntivo Ricavi': 'consuntivo_ricavi',
-  'CG Budget': 'cg_budget',
-  'CG Consuntivo': 'cg_consuntivo',
-  'Preventivi': 'preventivi',
-  'Preventivi Righe': 'preventivi_righe',
 };
 
 const EXCEL_EXPORT_TABLES = [
@@ -58,8 +48,8 @@ const BACKUP_TABLES = [
 const CALCULATED_SHEETS = new Set([
   'Dashboard Summary',
   'Variance Analysis',
+  'Quote Tax Summary',
   'Settings',
-  'Varianze',
 ]);
 
 function _downloadBlob(blob, filename) {
@@ -118,8 +108,8 @@ async function _dashboardSummaryRows() {
     actualCosts += e.costi;
     budgetRevenue += b.ricavi;
     actualRevenue += e.ricavi;
-    budgetTax += b.ivanetta;
-    actualTax += e.ivanetta;
+    budgetTax += b.taxNet;
+    actualTax += e.taxNet;
   }
 
   return [
@@ -157,21 +147,67 @@ async function _varianceRows() {
       'Budget Margin': b.margine,
       'Actual Margin': e.margine,
       'Margin Variance': e.margine - b.margine,
-      'Budget Tax Net': b.ivanetta,
-      'Actual Tax Net': e.ivanetta,
+      'Budget Tax Net': b.taxNet,
+      'Actual Tax Net': e.taxNet,
     };
   }));
+}
+
+async function _quoteTaxSummaryRows() {
+  const quotes = await DB.all('preventivi');
+  const lines = await DB.all('preventivi_righe');
+  const projects = await DB.all('anagrafica');
+  const projectByCode = projects.reduce(function (acc, project) {
+    acc[project.codice] = project;
+    return acc;
+  }, {});
+  const taxLabel = AppSettings.taxLabel();
+  const disclaimer = AppSettings.taxDisclaimer ? AppSettings.taxDisclaimer() : '';
+
+  return quotes.map(function (quote) {
+    const quoteLines = lines.filter(line => String(line.preventivo_id) === String(quote.id));
+    let subtotal = 0;
+    let taxAmount = 0;
+    const taxExempt = Boolean(quote.tax_exempt);
+    quoteLines.forEach(function (line) {
+      const amount = +line.importo || 0;
+      subtotal += amount;
+      taxAmount += F.salesTaxSummary(amount, line.tax_rate ?? F.defaultTaxRate(), taxExempt).taxAmount;
+    });
+    const firstRate = quoteLines.find(line => line.tax_rate !== undefined && line.tax_rate !== null)?.tax_rate ?? '';
+    const project = projectByCode[quote.codice] || {};
+    return {
+      'Quote No.': quote.numero,
+      'Project Code': quote.codice,
+      Project: project.nome || '',
+      Client: project.cliente || '',
+      Date: quote.data,
+      Status: quote.stato,
+      'Tax Mode': quote.tax_mode || (AppSettings.isUsProfile && AppSettings.isUsProfile() ? 'manual-us-sales-tax' : 'manual-tax'),
+      'Tax Exempt': taxExempt ? 'Yes' : 'No',
+      'Customer State / County': quote.tax_jurisdiction || '',
+      [taxLabel + ' Rate %']: taxExempt ? 0 : firstRate,
+      Subtotal: F.roundMoney(subtotal),
+      [taxLabel]: F.roundMoney(taxAmount),
+      ['Total incl. ' + taxLabel]: F.roundMoney(subtotal + taxAmount),
+      'Tax Note': quote.tax_note || '',
+      'Compliance Note': disclaimer,
+    };
+  });
 }
 
 function _settingsRows() {
   const settings = AppSettings.get();
   return [
+    { Key: 'country_profile', Value: settings.country_profile },
     { Key: 'language', Value: settings.language },
     { Key: 'currency', Value: settings.currency },
     { Key: 'locale', Value: settings.locale },
     { Key: 'tax_label', Value: settings.tax_label },
     { Key: 'tax_id_label', Value: settings.tax_id_label },
     { Key: 'tax_rates', Value: settings.tax_rates.join(', ') },
+    { Key: 'tax_mode', Value: settings.country_profile === 'US' ? 'manual-us-sales-tax' : 'manual-tax' },
+    { Key: 'tax_disclaimer', Value: settings.tax_disclaimer || '' },
     { Key: 'company_name', Value: settings.company.name },
     { Key: 'company_address', Value: settings.company.address },
     { Key: 'company_postal_code', Value: settings.company.postal_code },
@@ -200,6 +236,7 @@ async function exportExcel() {
   }
 
   _appendSheet(wb, await _varianceRows(), 'Variance Analysis');
+  _appendSheet(wb, await _quoteTaxSummaryRows(), 'Quote Tax Summary');
   _appendSheet(wb, _settingsRows(), 'Settings');
 
   XLSX.writeFile(wb, 'project-cost-manager-' + date + '.xlsx');
