@@ -20,8 +20,6 @@ const TABLE_KEYS = {
 
 /* Application constants */
 const C = {
-  SALES_TAX_RATES: [0, 4, 5, 6, 7, 8.25, 10],
-
   CATC: ['Labor', 'Materials', 'Equipment', 'Subcontractors', 'Transportation', 'Other'],
 
   STATI: ['Planned', 'In progress', 'Completed', 'On hold'],

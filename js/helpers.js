@@ -2,7 +2,7 @@
 
 /* ============================================================
  * HELPERS.JS - Pure utility functions with no DOM or storage dependency.
- * F.money, F.pct, F.esc, F.taxMultiplier, F.sel, F.kpi, F.cls
+ * F.money, F.pct, F.esc, F.roundMoney, F.sel, F.kpi, F.cls
  * ============================================================ */
 
 const F = {
@@ -28,37 +28,11 @@ const F = {
       .replace(/>/g, '&gt;');
   },
 
-  /* Converts a sales tax percentage into a decimal multiplier. */
-  taxMultiplier(s) {
-    return F.taxRate(s) / 100;
-  },
-
-  taxRate(s) {
-    try {
-      const parsed = parseFloat(String(s).replace(',', '.'));
-      return Number.isFinite(parsed) && parsed >= 0 ? parsed : 0;
-    }
-    catch { return 0; }
-  },
-
   roundMoney(v) {
     const n = Number(v);
     if (!Number.isFinite(n)) return 0;
     const adjusted = n + (n < 0 ? -1 : 1) * 1e-9;
     return Number((Math.round(adjusted * 100) / 100).toFixed(2));
-  },
-
-  salesTaxSummary(amount, rate, taxExempt) {
-    const taxableBase = F.roundMoney(Math.max(0, Number(amount) || 0));
-    const normalizedRate = taxExempt ? 0 : F.taxRate(rate);
-    const taxAmount = taxExempt ? 0 : F.roundMoney(taxableBase * (normalizedRate / 100));
-    return {
-      taxableBase,
-      taxRate: normalizedRate,
-      taxAmount,
-      total: F.roundMoney(taxableBase + taxAmount),
-      taxExempt: Boolean(taxExempt),
-    };
   },
 
   /* Genera le <option> di un <select> con selezione corrente evidenziata */
@@ -68,17 +42,8 @@ const F = {
     ).join('');
   },
 
-  taxLabel() {
-    return window.AppSettings ? AppSettings.taxLabel() : 'Tax';
-  },
-
   taxIdLabel() {
     return window.AppSettings ? AppSettings.taxIdLabel() : 'Tax ID';
-  },
-
-  defaultTaxRate() {
-    const rates = window.AppSettings ? AppSettings.taxRates() : C.SALES_TAX_RATES;
-    return rates.includes(8.25) ? 8.25 : (rates[rates.length - 1] ?? 0);
   },
 
   /* Genera l'HTML di una KPI card semplice (senza icon-box) */
@@ -171,7 +136,7 @@ const ImportSafety = {
 window.ImportSafety = ImportSafety;
 
 /* ============================================================
- * TOTALS - Calculates revenue, costs, margin, and sales tax for a project.
+ * TOTALS - Calculates revenue, costs, and margin for a project.
  *
  * VERSIONE OTTIMIZZATA v2 (dev_ottimizzazione):
  *   Accetta un parametro opzionale `bulk` con i dati già caricati
@@ -216,15 +181,9 @@ async function totali(prefix, codice, bulk) {
 
   const tc = sum(costi,  'importo');
   const tr = sum(ricavi, 'importo');
-  const ic = costi.reduce( (a, r) => a + (+r.importo || 0) * F.taxMultiplier(r.tax_rate ?? F.defaultTaxRate()), 0);
-  const ir = ricavi.reduce((a, r) => a + (+r.importo || 0) * F.taxMultiplier(r.tax_rate ?? F.defaultTaxRate()), 0);
-
   return {
     costi:     tc,
     ricavi:    tr,
     margine:   tr - tc,
-    taxCosts:  ic,
-    taxRevenue: ir,
-    taxNet:  ir - ic,
   };
 }

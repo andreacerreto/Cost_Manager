@@ -122,9 +122,9 @@ async function testSettingsAreNormalizedBeforePersisting() {
   assert.equal(saved.language, 'en');
   assert.equal(saved.currency, 'USD');
   assert.equal(saved.locale, 'en-US');
-  assert.deepEqual(plain(saved.tax_rates), [8.25]);
-  assert.equal(saved.tax_label, 'Sales Tax');
-  assert.equal(saved.tax_id_label, 'EIN / Tax ID');
+  assert.equal(Object.hasOwn(saved, 'tax_rates'), false);
+  assert.equal(Object.hasOwn(saved, 'tax_label'), false);
+  assert.equal(Object.hasOwn(saved, 'tax_id_label'), false);
   assert.equal(saved.company.name.length, 500);
   assert.doesNotThrow(() => get(context, 'AppSettings.money(10)'));
 }

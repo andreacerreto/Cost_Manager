@@ -10,7 +10,7 @@ Pages.varianze = async function() {
   const el    = document.getElementById('page-varianze');
   const projs = await DB.all('anagrafica');
 
-  let rp=0, rc=0, cp=0, cc=0, iNp=0, iNc=0;
+  let rp=0, rc=0, cp=0, cc=0;
 
   /* Righe tabella varianze */
   const rows = await Promise.all(projs.map(async function(p) {
@@ -18,7 +18,6 @@ Pages.varianze = async function() {
     const e = await totali('consuntivo', p.codice);
     rp+=b.ricavi; rc+=e.ricavi;
     cp+=b.costi;  cc+=e.costi;
-    iNp+=b.taxNet; iNc+=e.taxNet;
 
     return '<tr>' +
       '<td><b>' + F.esc(p.codice) + '</b></td>' +
@@ -37,9 +36,6 @@ Pages.varianze = async function() {
       '<td class="r">' + F.money(b.margine) + '</td>' +
       '<td class="r">' + F.money(e.margine) + '</td>' +
       '<td class="r ' + F.cls(e.margine - b.margine) + '">' + F.money(e.margine - b.margine) + '</td>' +
-      /* Net tax */
-      '<td class="r tax">' + F.money(b.taxNet) + '</td>' +
-      '<td class="r tax">' + F.money(e.taxNet) + '</td>' +
     '</tr>';
   }));
 
@@ -58,7 +54,6 @@ Pages.varianze = async function() {
         '<th class="r">\u0394 Revenue</th><th class="r">\u0394%</th>' +
         '<th class="r">Planned Margin</th><th class="r">Actual Margin</th>' +
         '<th class="r">\u0394 Margin</th>' +
-        '<th class="r tax">' + F.esc(F.taxLabel()) + ' Net B.</th><th class="r tax">' + F.esc(F.taxLabel()) + ' Net A.</th>' +
       '</tr></thead>' +
 
       '<tbody>' + rows.join('') + '</tbody>' +
@@ -76,8 +71,6 @@ Pages.varianze = async function() {
         '<td class="r">' + F.money(mp) + '</td>' +
         '<td class="r">' + F.money(mc) + '</td>' +
         '<td class="r ' + F.cls(mc - mp) + '">' + F.money(mc - mp) + '</td>' +
-        '<td class="r">' + F.money(iNp) + '</td>' +
-        '<td class="r">' + F.money(iNc) + '</td>' +
       '</tr></tfoot>' +
     '</table></div>';
 };

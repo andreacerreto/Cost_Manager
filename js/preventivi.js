@@ -41,28 +41,20 @@ const _APP_LOGO_SVG = `<svg width="28" height="28" viewBox="0 0 24 24" fill="non
  * ------------------------------------------------------------ */
 Pages._prevFiltroStato = '';
 
-function _prevIsUsMode() {
-  return window.AppSettings && AppSettings.isUsProfile && AppSettings.isUsProfile();
-}
+const PRE_TAX_QUOTE_NOTE = 'Amounts shown are pre-tax. Taxes, if applicable, are excluded unless expressly stated.';
 
 function _prevQuoteLabels() {
   return {
     title: 'Quote',
     newQuote: 'New Quote',
     customerNote: 'Customer notes',
-    jurisdiction: 'Customer state / county',
-    jurisdictionPlaceholder: 'e.g. CA / Los Angeles County',
-    taxExempt: 'Tax exempt',
-    taxNote: 'Sales Tax note',
-    taxNotePlaceholder: 'Manual rate source, exemption certificate, or state/county note',
-    taxGuidance: 'Set your applicable Sales Tax rate manually. Verify taxability, exemptions and nexus obligations with your accountant.',
     subtotal: 'Subtotal',
-    totalInclTax: 'Total incl. ',
+    totalPreTax: 'Total pre-tax',
     issueDate: 'Issue date',
     recipient: 'Customer',
     subject: 'Subject',
     detail: 'Line items',
-    termsTitle: 'Sales Tax handling',
+    termsTitle: 'Terms',
     standardTerms: 'This quote is valid for 30 days from the issue date. Prices include labor and materials unless otherwise stated. Payment terms: to be agreed. Work starts after written acceptance.',
     signatureCustomer: 'Accepted by Customer',
     signatureCompany: 'For ',
@@ -73,20 +65,6 @@ function _prevQuoteLabels() {
     unit: 'Unit',
     unitPrice: 'Unit Price',
     amount: 'Amount',
-  };
-}
-
-function _prevIsTaxExempt() {
-  return Boolean(document.getElementById('prev-tax-exempt')?.checked);
-}
-
-function _prevTaxSummary(amount, rate, taxExempt) {
-  return F.salesTaxSummary ? F.salesTaxSummary(amount, rate, taxExempt) : {
-    taxableBase: amount,
-    taxRate: taxExempt ? 0 : F.taxRate(rate),
-    taxAmount: taxExempt ? 0 : amount * F.taxMultiplier(rate),
-    total: amount + (taxExempt ? 0 : amount * F.taxMultiplier(rate)),
-    taxExempt: Boolean(taxExempt),
   };
 }
 
@@ -384,28 +362,7 @@ Pages._prevEditorHTML = function (info, getMarkup, nextNum) {
         '<input id="prev-note" style="width:100%;" placeholder="Terms, validity, or customer-facing notes...">' +
       '</div>' +
 
-      '<div>' +
-        '<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">' + F.esc(labels.jurisdiction) + '</label>' +
-        '<input id="prev-tax-jurisdiction" style="width:100%;" placeholder="' + F.esc(labels.jurisdictionPlaceholder) + '">' +
-      '</div>' +
-
-      '<label style="display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:#374151;margin-top:26px;">' +
-        '<input id="prev-tax-exempt" type="checkbox" onchange="Pages._prevUpdate()"> ' + F.esc(labels.taxExempt) +
-      '</label>' +
-
-      '<div>' +
-        '<label style="font-size:12px;font-weight:700;color:#374151;display:block;margin-bottom:5px;">' + F.esc(labels.taxNote) + '</label>' +
-        '<input id="prev-tax-note" style="width:100%;" placeholder="' + F.esc(labels.taxNotePlaceholder) + '">' +
-      '</div>' +
-
     '</div>' +
-
-    (_prevIsUsMode()
-      ? '<div style="background:#EFF6FF;border:1px solid #93C5FD;border-radius:8px;' +
-           'padding:10px 16px;font-size:12px;color:#1E3A8A;margin-bottom:14px;max-width:780px;">' +
-          F.esc(labels.taxGuidance) +
-        '</div>'
-      : '') +
 
     '<div style="background:#FFF8E1;border:1px solid #F9A825;border-radius:8px;' +
          'padding:10px 16px;font-size:12px;color:#7B5200;margin-bottom:14px;max-width:780px;">' +
@@ -417,14 +374,12 @@ Pages._prevEditorHTML = function (info, getMarkup, nextNum) {
         '<th>Category</th><th>Description</th><th>Qty</th><th>Unit</th>' +
         '<th style="color:#F9A825;">Internal Cost</th>' +
         '<th>Markup %</th><th>Unit Price</th><th>Amount</th>' +
-        '<th>' + F.esc(F.taxLabel()) + ' %</th><th>' + F.esc(F.taxLabel()) + '</th><th>Note</th><th></th>' +
+        '<th>Note</th><th></th>' +
       '</tr></thead>' +
       '<tbody id="prev-tbody"></tbody>' +
       '<tfoot><tr>' +
-        '<td colspan="7" class="r" style="font-weight:700;">SUBTOTAL</td>' +
+        '<td colspan="7" class="r" style="font-weight:700;">' + F.esc(labels.totalPreTax).toUpperCase() + '</td>' +
         '<td id="prev-tot-imp" class="r" style="font-weight:700;"></td>' +
-        '<td style="font-weight:700;">TOT ' + F.esc(F.taxLabel()) + '</td>' +
-        '<td id="prev-tot-tax" class="r" style="font-weight:700;"></td>' +
         '<td colspan="2"></td>' +
       '</tr></tfoot>' +
     '</table></div>' +
@@ -516,8 +471,6 @@ Pages._prevAddRow = function (budgetRow, getMarkup) {
       '<td><input data-role="mkup" type="number" step="0.5" min="0" value="' + markup + '" style="width:70px;" oninput="Pages._prevUpdate()"></td>' +
       '<td data-role="pu" class="r"><b>' + F.money(pu) + '</b></td>' +
       '<td data-role="imp" class="r"><b>' + F.money(imp) + '</b></td>' +
-      '<td><select data-role="tax" onchange="Pages._prevUpdate()">' + F.sel(C.SALES_TAX_RATES, r.tax_rate ?? F.defaultTaxRate()) + '</select></td>' +
-      '<td data-role="taxv" class="r">' + F.money(imp * F.taxMultiplier(r.tax_rate ?? F.defaultTaxRate())) + '</td>' +
       '<td><input data-role="note" value="' + F.esc(r.note || '') + '"></td>' +
       '<td><button onclick="this.closest(\'tr\').remove(); Pages._prevUpdate();"' +
           ' style="background:none;border:none;color:#C62828;cursor:pointer;font-size:16px;padding:2px 6px;" title="Remove line">\u00d7</button></td>' +
@@ -531,8 +484,7 @@ Pages._prevAddRow = function (budgetRow, getMarkup) {
  * Ricalcola totali e riepilogo margine live.
  * ------------------------------------------------------------ */
 Pages._prevUpdate = function () {
-  let totImp = 0, totTax = 0, totCosto = 0;
-  const taxExempt = _prevIsTaxExempt();
+  let totImp = 0, totCosto = 0;
 
   document.querySelectorAll('#prev-tbody tr').forEach(function (row) {
     const g = (role) => row.querySelector('[data-role="' + role + '"]')?.value ?? '';
@@ -541,34 +493,26 @@ Pages._prevUpdate = function () {
     const mkup = +g('mkup') || 0;
     const pu   = cu * (1 + mkup / 100);
     const imp  = pu * qty;
-    const tax  = _prevTaxSummary(imp, g('tax') || F.defaultTaxRate(), taxExempt);
 
     const puEl  = row.querySelector('[data-role="pu"]');
     const impEl = row.querySelector('[data-role="imp"]');
-    const taxEl = row.querySelector('[data-role="taxv"]');
     if (puEl)  puEl.innerHTML  = '<b>' + F.money(pu)  + '</b>';
     if (impEl) impEl.innerHTML = '<b>' + F.money(imp) + '</b>';
-    if (taxEl) taxEl.textContent = F.money(tax.taxAmount);
 
     totImp   += imp;
-    totTax   += tax.taxAmount;
     totCosto += cu * qty;
   });
 
   const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
   set('prev-tot-imp', F.money(totImp));
-  set('prev-tot-tax', F.money(totTax));
 
   const margineEuro = totImp - totCosto;
   const marginePct  = totImp > 0 ? (margineEuro / totImp) * 100 : 0;
 
   const recap = document.getElementById('prev-recap');
   if (recap) {
-    const taxTitle = taxExempt ? F.taxLabel() + ' Exempt' : F.taxLabel() + ' Total';
     recap.innerHTML =
-      F.kpi('Subtotal',           F.money(totImp),          '', '') +
-      F.kpi(taxTitle, F.money(totTax),          '', 'c-grey') +
-      F.kpi('Total incl. ' + F.taxLabel(), F.money(totImp + totTax), '', '') +
+      F.kpi('Total pre-tax',      F.money(totImp),          '', '') +
       F.kpi('Internal Cost',      F.money(totCosto),        '', 'c-grey') +
       F.kpi('Gross Margin',       F.money(margineEuro),     '', margineEuro < 0 ? 'c-red' : 'c-margin') +
       F.kpi('Margin %',           F.pct(marginePct),        '', '');
@@ -601,7 +545,7 @@ Pages._prevSalva = async function () {
       categoria: gv('cat'), descrizione: des, qta: qty, um: gv('um'),
       costo_unitario: cu, markup_pct: mkup,
       prezzo_unitario: pu, importo: imp,
-      tax_rate: gv('tax') || String(F.defaultTaxRate()), note: gv('note'),
+      note: gv('note'),
     });
   });
 
@@ -610,10 +554,6 @@ Pages._prevSalva = async function () {
     data:         g('prev-data'),
     stato:        g('prev-stato'),
     note_cliente: g('prev-note'),
-    tax_exempt:   _prevIsTaxExempt(),
-    tax_jurisdiction: g('prev-tax-jurisdiction'),
-    tax_note:     g('prev-tax-note'),
-    tax_mode:     'manual-us-sales-tax',
     creato_da:    App.userEmail ?? '',
   };
 
@@ -701,19 +641,12 @@ Pages._prevApri = async function (prevId) {
   document.getElementById('prev-data').value   = prev.data;
   document.getElementById('prev-stato').value  = prev.stato;
   document.getElementById('prev-note').value   = prev.note_cliente;
-  const taxExemptEl = document.getElementById('prev-tax-exempt');
-  if (taxExemptEl) taxExemptEl.checked = Boolean(prev.tax_exempt);
-  const taxJurisdictionEl = document.getElementById('prev-tax-jurisdiction');
-  if (taxJurisdictionEl) taxJurisdictionEl.value = prev.tax_jurisdiction || '';
-  const taxNoteEl = document.getElementById('prev-tax-note');
-  if (taxNoteEl) taxNoteEl.value = prev.tax_note || '';
 
   document.getElementById('prev-tbody').innerHTML = '';
   righe.forEach(function (r) {
     Pages._prevAddRow(
       { categoria: r.categoria, descrizione: r.descrizione, qta: r.qta, um: r.um,
-        costo_unitario: r.costo_unitario, markup_pct: r.markup_pct,
-        tax_rate: r.tax_rate, note: r.note },
+        costo_unitario: r.costo_unitario, markup_pct: r.markup_pct, note: r.note },
       function () { return r.markup_pct || 25; }
     );
   });
@@ -734,16 +667,10 @@ Pages._prevApri = async function (prevId) {
  *   .nomeCliente  {string}  — nome cliente da anagrafica
  *   .noteCliente  {string}  — note/oggetto del preventivo
  *   .righeHTML    {string}  — righe <tr> già costruite
- *   .totImp       {number}  — totale imponibile
- *   .totTax       {number}  — total sales tax
- *   .totFinale    {number}  — totale complessivo
+ *   .totImp       {number}  — total pre-tax amount
  * ============================================================ */
 Pages._prevTemplatePDF = function (opts) {
   const labels = _prevQuoteLabels();
-  const taxLabel = F.taxLabel();
-  const taxExempt = Boolean(opts.taxExempt);
-  const taxJurisdiction = opts.taxJurisdiction || '';
-  const taxNote = opts.taxNote || '';
   /* Format ISO date for the US locale. */
   const fmtData = function (iso) {
     if (!iso) return '\u2014';
@@ -753,10 +680,6 @@ Pages._prevTemplatePDF = function (opts) {
       return iso;
     }
   };
-
-  const taxHandlingHtml =
-    `<p><strong>Sales Tax handling:</strong> Sales Tax is manually entered by the user for this quote. Project Cost Manager does not automatically determine rates, taxability, exemptions, filing requirements, or economic nexus. Always verify with your accountant or tax advisor.</p>
-     <p><strong>Status:</strong> ${taxExempt ? 'Tax exempt' : 'Taxable estimate'}${taxJurisdiction ? ' &mdash; <strong>Jurisdiction:</strong> ' + F.esc(taxJurisdiction) : ''}${taxNote ? '<br><strong>Note:</strong> ' + F.esc(taxNote) : ''}</p>`;
 
   /* CSS comune al documento PDF */
   const css = `
@@ -832,7 +755,7 @@ Pages._prevTemplatePDF = function (opts) {
 
   /* Righe tabella o placeholder vuoto */
   const corpoTabella = opts.righeHTML ||
-    '<tr><td colspan="6" style="padding:14px;text-align:center;color:#94A3B8;font-style:italic;">No line items entered.</td></tr>';
+    '<tr><td colspan="5" style="padding:14px;text-align:center;color:#94A3B8;font-style:italic;">No line items entered.</td></tr>';
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -894,8 +817,7 @@ Pages._prevTemplatePDF = function (opts) {
         <th class="c" style="width:9%;">${F.esc(labels.qty)}</th>
         <th class="c" style="width:9%;">${F.esc(labels.unit)}</th>
         <th class="r" style="width:15%;">${F.esc(labels.unitPrice)}</th>
-        <th class="r" style="width:15%;">${F.esc(labels.amount)}</th>
-        <th class="c" style="width:10%;">${F.esc(taxLabel)} %</th>
+        <th class="r" style="width:25%;">${F.esc(labels.amount)}</th>
       </tr></thead>
       <tbody>${corpoTabella}</tbody>
     </table>
@@ -904,15 +826,14 @@ Pages._prevTemplatePDF = function (opts) {
     <div class="riepilogo">
       <div class="riepilogo-box">
         <div class="riepilogo-riga"><span class="lbl">${F.esc(labels.subtotal)}</span><span class="val">${F.money(opts.totImp)}</span></div>
-        <div class="riepilogo-riga"><span class="lbl">${F.esc(taxLabel)}</span><span class="val">${F.money(opts.totTax)}</span></div>
-        <div class="riepilogo-riga totale"><span class="lbl">${F.esc(labels.totalInclTax + taxLabel)}</span><span class="val">${F.money(opts.totFinale)}</span></div>
+        <div class="riepilogo-riga totale"><span class="lbl">${F.esc(labels.totalPreTax)}</span><span class="val">${F.money(opts.totImp)}</span></div>
       </div>
     </div>
 
     <!-- 7. NOTE E CONDIZIONI -->
     <div class="note-box">
       <div class="lbl">${F.esc(labels.termsTitle)}</div>
-      ${taxHandlingHtml}
+      <p><strong>${F.esc(PRE_TAX_QUOTE_NOTE)}</strong></p>
       <p>${F.esc(labels.standardTerms)}</p>
     </div>
 
@@ -977,12 +898,10 @@ Pages._prevBuildHTML = async function (prevId) {
   };
 
   /* Calcoli totali */
-  let totImp = 0, totTax = 0;
-  const taxExempt = Boolean(prev.tax_exempt);
+  let totImp = 0;
   righe.forEach(function (r) {
     const imp = +r.importo || 0;
     totImp += imp;
-    totTax += _prevTaxSummary(imp, r.tax_rate ?? F.defaultTaxRate(), taxExempt).taxAmount;
   });
 
   /* Righe tabella HTML */
@@ -994,7 +913,6 @@ Pages._prevBuildHTML = async function (prevId) {
       '<td style="padding:9px 12px;border-bottom:1px solid #EEF0EE;font-size:13px;text-align:center;color:#475569;">' + F.esc(r.um || '') + '</td>' +
       '<td style="padding:9px 12px;border-bottom:1px solid #EEF0EE;font-size:13px;text-align:right;color:#1A1A2E;">'  + F.money(+r.prezzo_unitario || 0) + '</td>' +
       '<td style="padding:9px 12px;border-bottom:1px solid #EEF0EE;font-size:13px;text-align:right;font-weight:600;color:#1B4332;">' + F.money(+r.importo || 0) + '</td>' +
-      '<td style="padding:9px 12px;border-bottom:1px solid #EEF0EE;font-size:13px;text-align:center;color:#475569;">' + F.esc(String(r.tax_rate ?? F.defaultTaxRate())) + '%</td>' +
     '</tr>';
   }).join('');
 
@@ -1005,11 +923,6 @@ Pages._prevBuildHTML = async function (prevId) {
     noteCliente: prev.note_cliente || '',
     righeHTML,
     totImp,
-    totTax,
-    totFinale:   totImp + totTax,
-    taxExempt,
-    taxJurisdiction: prev.tax_jurisdiction || '',
-    taxNote: prev.tax_note || '',
     azienda,
   });
 };
@@ -1036,9 +949,6 @@ Pages._prevGeneraPDFEditor = async function () {
   const numero = g('prev-numero').trim() || 'Draft';
   const data   = g('prev-data');
   const note   = g('prev-note');
-  const taxExempt = _prevIsTaxExempt();
-  const taxJurisdiction = g('prev-tax-jurisdiction');
-  const taxNote = g('prev-tax-note');
 
   /* Raccoglie righe dall'editor */
   const righe = [];
@@ -1054,7 +964,6 @@ Pages._prevGeneraPDFEditor = async function () {
     righe.push({
       descrizione: des, qta: qty, um: gv('um'),
       prezzo_unitario: pu, importo: imp,
-      tax_rate: gv('tax') || String(F.defaultTaxRate()),
     });
   });
 
@@ -1075,11 +984,10 @@ Pages._prevGeneraPDFEditor = async function () {
   };
 
   /* Calcoli */
-  let totImp = 0, totTax = 0;
+  let totImp = 0;
   righe.forEach(function (r) {
     const imp = +r.importo || 0;
     totImp += imp;
-    totTax += _prevTaxSummary(imp, r.tax_rate ?? F.defaultTaxRate(), taxExempt).taxAmount;
   });
 
   /* Righe tabella */
@@ -1091,7 +999,6 @@ Pages._prevGeneraPDFEditor = async function () {
       '<td style="padding:9px 12px;border-bottom:1px solid #EEF0EE;font-size:13px;text-align:center;color:#475569;">' + F.esc(r.um || '') + '</td>' +
       '<td style="padding:9px 12px;border-bottom:1px solid #EEF0EE;font-size:13px;text-align:right;">'  + F.money(+r.prezzo_unitario || 0) + '</td>' +
       '<td style="padding:9px 12px;border-bottom:1px solid #EEF0EE;font-size:13px;text-align:right;font-weight:600;color:#1B4332;">' + F.money(+r.importo || 0) + '</td>' +
-      '<td style="padding:9px 12px;border-bottom:1px solid #EEF0EE;font-size:13px;text-align:center;color:#475569;">' + F.esc(String(r.tax_rate ?? F.defaultTaxRate())) + '%</td>' +
     '</tr>';
   }).join('');
 
@@ -1100,11 +1007,7 @@ Pages._prevGeneraPDFEditor = async function () {
     nomeCliente: proj.cliente || '',
     noteCliente: note,
     righeHTML,
-    totImp, totTax,
-    totFinale: totImp + totTax,
-    taxExempt,
-    taxJurisdiction,
-    taxNote,
+    totImp,
     azienda,
   });
 

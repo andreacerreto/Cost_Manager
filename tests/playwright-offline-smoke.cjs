@@ -8,13 +8,23 @@ function loadPlaywright() {
     return require('playwright');
   } catch (err) {
     const modulesDir = process.env.WORKSPACE_NODE_MODULES;
-    if (!modulesDir) throw err;
-    return require(path.join(modulesDir, 'playwright'));
+    if (!modulesDir) {
+      console.log('SKIP playwright-offline-smoke: Playwright is not installed.');
+      return null;
+    }
+    try {
+      return require(path.join(modulesDir, 'playwright'));
+    } catch (bundledErr) {
+      console.log('SKIP playwright-offline-smoke: Playwright is not fully installed.');
+      return null;
+    }
   }
 }
 
 async function main() {
-  const { chromium } = loadPlaywright();
+  const playwright = loadPlaywright();
+  if (!playwright) return;
+  const { chromium } = playwright;
   const appPath = path.resolve(__dirname, '..', 'index.html');
   const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE || [
     'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe',
@@ -73,7 +83,7 @@ async function main() {
       { codice: 'PRJ-X', nome: '=Formula Project', cliente: 'Client A', stato: 'In corso' },
     ]);
     await DB.insertBatch('budget_ricavi', [
-      { codice: 'PRJ-X', tipo_ricavo: 'Fee', descrizione: 'Project fee', importo: 1000, tax_rate: 8.25 },
+      { codice: 'PRJ-X', tipo_ricavo: 'Fee', descrizione: 'Project fee', importo: 1000 },
     ]);
 
     let capturedExport = null;
@@ -107,6 +117,7 @@ async function main() {
       exportSheets: capturedExport.sheets,
       exportFilename: capturedExport.filename,
       formulaEscaped: capturedExport.projectNameCell === "'=Formula Project",
+      noQuoteTaxSummary: !capturedExport.sheets.includes('Quote Tax Summary'),
       importedProjectCodes: importedProjects.map(row => row.codice),
       backupHasSettings: Boolean(backup.settings && backup.settings.currency),
       backupHasTables: Boolean(backup.tables && Array.isArray(backup.tables.anagrafica)),
@@ -126,6 +137,7 @@ async function main() {
   if (!result.cspPresent) throw new Error('CSP meta tag is missing.');
   if (!workflow.exportSheets.includes('Dashboard Summary')) throw new Error('Excel summary sheet missing.');
   if (!workflow.exportSheets.includes('Projects')) throw new Error('Excel projects sheet missing.');
+  if (!workflow.noQuoteTaxSummary) throw new Error('Excel export still includes Quote Tax Summary.');
   if (!workflow.formulaEscaped) throw new Error('Formula-like Excel string was not escaped.');
   if (!workflow.importedProjectCodes.includes('PRJ-IMPORT')) throw new Error('Excel import did not load operational sheet.');
   if (!workflow.backupHasSettings || !workflow.backupHasTables) throw new Error('JSON backup payload incomplete.');

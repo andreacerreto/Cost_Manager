@@ -43,9 +43,7 @@ async function main() {
       countryProfile: AppSettings.countryProfile(),
       currency: AppSettings.get().currency,
       locale: AppSettings.get().locale,
-      taxLabel: AppSettings.taxLabel(),
       taxIdLabel: AppSettings.taxIdLabel(),
-      rates: AppSettings.taxRates(),
       bodyText: document.body.innerText,
     }));
 
@@ -53,16 +51,15 @@ async function main() {
     assert.equal(result.countryProfile, 'US');
     assert.equal(result.currency, 'USD');
     assert.equal(result.locale, 'en-US');
-    assert.equal(result.taxLabel, 'Sales Tax');
     assert.equal(result.taxIdLabel, 'EIN / Tax ID');
-    assert(result.rates.includes(8.25), 'US rate preset should include 8.25.');
-    assert(!result.rates.includes(22), 'US-only rate preset should not include 22.');
     const removedTerms = [
       String.fromCharCode(73, 86, 65),
       'P.' + String.fromCharCode(73, 86, 65),
       'country profile ' + String.fromCharCode(73, 84),
+      'Sales Tax',
+      'Tax rates',
     ];
-    assert(!removedTerms.some((term) => result.bodyText.includes(term)), 'US-only UI leaked a removed tax profile.');
+    assert(!removedTerms.some((term) => result.bodyText.includes(term)), 'No-tax UI leaked removed tax wording.');
 
     console.log('PASS playwright-us-only-smoke');
   } finally {

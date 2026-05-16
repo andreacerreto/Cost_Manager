@@ -59,8 +59,6 @@ Pages.budgetCons = async function(type) {
       '<td><input data-role="um"  value="' + F.esc(r.um) + '" class="w-um"></td>' +
       '<td><input data-role="cu"  type="number" value="' + (r.costo_unitario || '') + '" step="0.01" min="0"></td>' +
       '<td data-role="ct"  class="r"><b>' + F.money(tot) + '</b></td>' +
-      '<td><select data-role="tax">' + F.sel(C.SALES_TAX_RATES, r.tax_rate ?? F.defaultTaxRate()) + '</select></td>' +
-      '<td data-role="taxv" class="r">' + F.money(tot * F.taxMultiplier(r.tax_rate ?? F.defaultTaxRate())) + '</td>' +
       '<td><input data-role="note" value="' + F.esc(r.note) + '"></td>' +
     '</tr>';
   }
@@ -71,8 +69,6 @@ Pages.budgetCons = async function(type) {
       '<td><input data-role="tipo" value="' + F.esc(r.tipo_ricavo) + '" placeholder="Deposit, milestone, balance"></td>' +
       '<td><input data-role="des"  value="' + F.esc(r.descrizione) + '"></td>' +
       '<td><input data-role="imp"  type="number" value="' + (r.importo || '') + '" step="0.01" min="0"></td>' +
-      '<td><select data-role="tax">' + F.sel(C.SALES_TAX_RATES, r.tax_rate ?? F.defaultTaxRate()) + '</select></td>' +
-      '<td data-role="taxv" class="r">' + F.money((+r.importo || 0) * F.taxMultiplier(r.tax_rate ?? F.defaultTaxRate())) + '</td>' +
       '<td><input data-role="note" value="' + F.esc(r.note) + '"></td>' +
     '</tr>';
   }
@@ -99,15 +95,12 @@ Pages.budgetCons = async function(type) {
     '<div class="tbl-wrap"><table>' +
       '<thead><tr>' +
         '<th>Category</th><th>Description</th><th>Qty</th><th>U.M.</th>' +
-        '<th>' + F.esc(cLabel) + '</th><th>Total Cost</th>' +
-        '<th class="tax">' + F.esc(F.taxLabel()) + ' %</th><th class="tax">' + F.esc(F.taxLabel()) + '</th><th>Note</th>' +
+        '<th>' + F.esc(cLabel) + '</th><th>Total Cost</th><th>Note</th>' +
       '</tr></thead>' +
       '<tbody id="' + type + '-costi">' + costi.map(costoRow).join('') + '</tbody>' +
       '<tfoot><tr>' +
         '<td colspan="5" class="r">TOTAL COSTS</td>' +
         '<td id="' + type + '-tc" class="r"></td>' +
-        '<td class="tax-tot">TOT ' + F.esc(F.taxLabel()) + '</td>' +
-        '<td id="' + type + '-ic" class="r tax-tot"></td>' +
         '<td></td>' +
       '</tr></tfoot>' +
     '</table></div>' +
@@ -119,14 +112,12 @@ Pages.budgetCons = async function(type) {
       '<thead><tr>' +
         '<th class="blue">Revenue Type</th><th class="blue">Description</th>' +
         '<th class="blue">' + F.esc(iLabel) + '</th>' +
-        '<th class="tax">' + F.esc(F.taxLabel()) + ' %</th><th class="tax">' + F.esc(F.taxLabel()) + '</th><th class="blue">Note</th>' +
+        '<th class="blue">Note</th>' +
       '</tr></thead>' +
       '<tbody id="' + type + '-ricavi">' + ricavi.map(ricavoRow).join('') + '</tbody>' +
       '<tfoot><tr>' +
         '<td colspan="2" class="r">TOTAL REVENUE</td>' +
         '<td id="' + type + '-tr" class="r"></td>' +
-        '<td class="tax-tot">TOT ' + F.esc(F.taxLabel()) + '</td>' +
-        '<td id="' + type + '-ir" class="r tax-tot"></td>' +
         '<td></td>' +
       '</tr></tfoot>' +
     '</table></div>' +
@@ -146,30 +137,22 @@ Pages.budgetCons = async function(type) {
 
 /* Ricalcola totali costi/ricavi e aggiorna il riepilogo */
 Pages.bcUpdate = function(type) {
-  let tc=0, ic=0, tr=0, ir=0;
+  let tc=0, tr=0;
 
   /* Somma righe costi */
   document.querySelectorAll('#' + type + '-costi tr').forEach(function(row) {
     const g = function(role) { return row.querySelector('[data-role="' + role + '"]')?.value ?? ''; };
     const qty = +g('qty') || 0;
     const cu  = +g('cu')  || 0;
-    const taxMultiplier = F.taxMultiplier(g('tax') || F.defaultTaxRate());
     tc += qty * cu;
-    ic += qty * cu * taxMultiplier;
     const ctEl = row.querySelector('[data-role="ct"]');
     if (ctEl) ctEl.innerHTML = '<b>' + F.money(qty * cu) + '</b>';
-    const ivEl = row.querySelector('[data-role="taxv"]');
-    if (ivEl) ivEl.textContent = F.money(qty * cu * taxMultiplier);
   });
 
   /* Somma righe ricavi */
   document.querySelectorAll('#' + type + '-ricavi tr').forEach(function(row) {
     const imp = +(row.querySelector('[data-role="imp"]')?.value) || 0;
-    const taxMultiplier = F.taxMultiplier(row.querySelector('[data-role="tax"]')?.value || F.defaultTaxRate());
     tr += imp;
-    ir += imp * taxMultiplier;
-    const ivEl = row.querySelector('[data-role="taxv"]');
-    if (ivEl) ivEl.textContent = F.money(imp * taxMultiplier);
   });
 
   /* Aggiorna celle tfoot */
@@ -178,9 +161,7 @@ Pages.bcUpdate = function(type) {
     if (el) el.textContent = v;
   };
   set(type + '-tc', F.money(tc));
-  set(type + '-ic', F.money(ic));
   set(type + '-tr', F.money(tr));
-  set(type + '-ir', F.money(ir));
 
   /* Aggiorna riepilogo progetto */
   const recap = document.getElementById(type + '-recap');
@@ -189,7 +170,6 @@ Pages.bcUpdate = function(type) {
       F.kpi('Total Costs',    F.money(tc), '', '') +
       F.kpi('Total Revenue',  F.money(tr), '', '') +
       F.kpi('Gross Margin',   F.money(tr - tc), '', tr - tc < 0 ? 'c-red' : 'c-margin') +
-      F.kpi(F.taxLabel() + ' Net', F.money(ir - ic), '', 'c-grey') +
       F.kpi('Margin %',       F.pct(tr ? (tr - tc) / tr * 100 : NaN), '', '');
   }
 
@@ -217,7 +197,7 @@ Pages.bcSave = async function(type) {
       codice: App.proj, categoria: g(row, 'cat'),
       descrizione: des, qta: qty, um: g(row, 'um'),
       costo_unitario: cu, importo: qty * cu,
-      tax_rate: g(row, 'tax') || F.defaultTaxRate(), note: g(row, 'note'),
+      note: g(row, 'note'),
     });
   }
 
@@ -228,7 +208,7 @@ Pages.bcSave = async function(type) {
     ricavoRows.push({
       codice: App.proj, tipo_ricavo: tipo,
       descrizione: g(row, 'des'), importo: imp,
-      tax_rate: g(row, 'tax') || F.defaultTaxRate(), note: g(row, 'note'),
+      note: g(row, 'note'),
     });
   }
 
@@ -247,8 +227,6 @@ Pages.addCostoRow = function(type) {
       '<td><input data-role="um"  class="w-um"></td>' +
       '<td><input data-role="cu"  type="number" step="0.01" min="0"></td>' +
       '<td data-role="ct"  class="r"><b>' + F.money(0) + '</b></td>' +
-      '<td><select data-role="tax">' + F.sel(C.SALES_TAX_RATES, F.defaultTaxRate()) + '</select></td>' +
-      '<td data-role="taxv" class="r">' + F.money(0) + '</td>' +
       '<td><input data-role="note" value=""></td>' +
     '</tr>'
   );
@@ -261,8 +239,6 @@ Pages.addRicavoRow = function(type) {
       '<td><input data-role="tipo" placeholder="Deposit, milestone, balance"></td>' +
       '<td><input data-role="des"  value=""></td>' +
       '<td><input data-role="imp"  type="number" step="0.01" min="0"></td>' +
-      '<td><select data-role="tax">' + F.sel(C.SALES_TAX_RATES, F.defaultTaxRate()) + '</select></td>' +
-      '<td data-role="taxv" class="r">' + F.money(0) + '</td>' +
       '<td><input data-role="note" value=""></td>' +
     '</tr>'
   );
